@@ -1,6 +1,5 @@
 # おてんきぐらし (Otenki Gurashi) 🌤️
 
-[![Powered by Vercel](https://www.vercel.com/button)](https://vercel.com)
 
 あなたの「今」とつながる、新しい癒やしの体験。
 『おてんきぐらし』は、あなたのいる場所の現実世界の天気や時間とリアルタイムで連動する、新感覚の育成Webサービスです。
