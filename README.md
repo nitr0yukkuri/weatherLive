@@ -1,36 +1,94 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# おてんきぐらし (Otenki Gurashi) 🌤️
 
-## Getting Started
+[![Powered by Vercel](https://www.vercel.com/button)](https://vercel.com)
 
-First, run the development server:
+あなたの「今」とつながる、新しい癒やしの体験。
+『おてんきぐらし』は、あなたのいる場所の現実世界の天気や時間とリアルタイムで連動する、新感覚の育成Webサービスです。
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## ✨ コンセプト
 
-## Learn More
+**「天気予報を見ないあなたの、いちばん優しいおまもり。」**
 
-To learn more about Next.js, take a look at the following resources:
+天気予報の確認は面倒だけど、急な雨や気圧の変化はつらい…
+そんな方々のために、『おてんきぐらし』は生まれました。
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+ゲーム性のある優しい世界を通して、面倒だった天気確認を「雨だから、ゲーム内で特別なことができるかも？」という、ポジティブな体験へと変えていきます。
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 🚀 主な機能
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+* **天気・時間とのリアルタイム連動**
+    あなたのいる場所の「今」が、キャラクターの世界に直接反映されます。大阪で雨が降ればゲームの中も雨が降り、夜になればキャラクターも眠りにつきます。
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+* **おさんぽ機能**
+    キャラクターを「おさんぽ」に出すことができます。おさんぽ先の景色や、手に入るアイテムは天気によって変化。コレクションする楽しみが待っています。
+
+* **コレクション & 実績機能**
+    レベルアップのようなノルマはありません。「おさんぽ」で集めたアイテムを眺める「ずかん」や、「はじめて雨の日におさんぽした」といったキャラクターとの思い出を記録する「実績」が、あなたの毎日を彩ります。
+
+* **おまもり機能（気圧サポート）**
+    気圧が大きく低下する予報の際には、キャラクターが特別なアクションで、あなたのことをそっと気遣ってくれます。
+
+---
+
+## 🎨 デザインコンセプト
+
+**「インテリアのように、生活に馴染むデザイン」**
+
+「ミニマルな洗練さ」と「絵本のような温かみ」の両立を目指しました。全体的に淡いパステルカラーで統一し、各天候に合わせたメインカラーを設定することで、直感的に天気を把握できるようにしています。
+
+---
+
+## 🛠️ 技術構成 (Tech Stack)
+
+このプロジェクトは、モダンなJavaScript/TypeScriptの技術スタックで構築されています。
+
+| カテゴリ         | 技術                               | 役割                                            |
+| :--------------- | :--------------------------------- | :---------------------------------------------- |
+| **フレームワーク** | Next.js (React)                    | UI構築、APIサーバー機能                         |
+| **スタイリング** | Tailwind CSS                       | 効率的で美しいUIデザイン                        |
+| **アニメーション** | Framer Motion                      | 心地よいユーザー体験のための演出                  |
+| **データ取得** | SWR                                | APIとの効率的な通信                             |
+| **認証** | NextAuth.js                        | ユーザー登録・ログイン機能                      |
+| **データベース** | Vercel Postgres + Prisma           | ユーザーデータやアイテムの保存                  |
+| **デプロイ** | Vercel                             | 高速なホスティング                              |
+| **外部API** | OpenWeatherMap API                 | 天気情報の取得                                  |
+
+---
+
+## 🏁 ローカルでの起動方法
+
+1.  **リポジトリをクローン:**
+    ```bash
+    git clone [このリポジトリのURL]
+    cd otenki-gurashi
+    ```
+
+2.  **依存パッケージをインストール:**
+    ```bash
+    npm install
+    ```
+
+3.  **.env.local ファイルを作成:**
+    プロジェクトのルートに`.env.local`ファイルを作成し、OpenWeatherMapのAPIキーを設定します。
+    ```
+    NEXT_PUBLIC_WEATHER_API_KEY="YOUR_API_KEY_HERE"
+    ```
+
+4.  **開発サーバーを起動:**
+    ```bash
+    npm run dev
+    ```
+
+5.  ブラウザで [http://localhost:3000](http://localhost:3000) を開きます。
+
+---
+
+## ©️ Author
+
+[あなたの名前]
