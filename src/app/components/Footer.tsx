@@ -15,7 +15,7 @@ export default function Footer() {
     ];
 
     return (
-        <footer className="w-full bg-pink-50/80 backdrop-blur-sm flex-shrink-0">
+        <footer className="w-full bg-white/20 backdrop-blur-sm flex-shrink-0">
             <nav className="flex items-center h-20">
                 {navItems.map((item) => (
                     <NavItem
