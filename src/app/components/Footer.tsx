@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import NavItem from './NavItem';
-// react-iconsから必要なアイコンをインポート
 import { BsCloud, BsHeartFill, BsStarFill } from 'react-icons/bs';
 import { MdDirectionsWalk } from 'react-icons/md';
 import { IoSettingsSharp } from 'react-icons/io5';
@@ -10,13 +9,13 @@ import { IoSettingsSharp } from 'react-icons/io5';
 export default function Footer() {
     const [activePage, setActivePage] = useState('コレクション');
 
-    // アイコンをreact-iconsのコンポーネントに置き換え
+    // 各アイテムに遷移先の `href` プロパティを追加
     const navItems = [
-        { name: '天気予報', icon: <BsCloud size={28} /> },
-        { name: 'おさんぽ', icon: <MdDirectionsWalk size={28} /> },
-        { name: 'コレクション', icon: <BsHeartFill size={28} />, hasNotification: true },
-        { name: '実績', icon: <BsStarFill size={28} /> },
-        { name: '設定', icon: <IoSettingsSharp size={28} /> },
+        { name: '天気予報', href: '/weather', icon: <BsCloud size={28} /> },
+        { name: 'おさんぽ', href: '#', icon: <MdDirectionsWalk size={28} /> },
+        { name: 'コレクション', href: '#', icon: <BsHeartFill size={28} />, hasNotification: true },
+        { name: '実績', href: '#', icon: <BsStarFill size={28} /> },
+        { name: '設定', href: '#', icon: <IoSettingsSharp size={28} /> },
     ];
 
     return (
@@ -25,6 +24,7 @@ export default function Footer() {
                 {navItems.map((item) => (
                     <NavItem
                         key={item.name}
+                        href={item.href} // hrefを渡す
                         icon={item.icon}
                         label={item.name}
                         isActive={activePage === item.name}
