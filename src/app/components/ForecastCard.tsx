@@ -10,7 +10,6 @@ interface ForecastCardProps {
 }
 
 export default function ForecastCard({ day, date, weather, high, low, pop }: ForecastCardProps) {
-    // 天気の種類に応じて日本語のテキストを返すヘルパー関数
     const getWeatherText = (weatherType: string) => {
         switch (weatherType) {
             case 'partlyCloudy': return '晴れ時々くもり';
@@ -23,22 +22,24 @@ export default function ForecastCard({ day, date, weather, high, low, pop }: For
     };
 
     return (
-        <div className="flex-shrink-0 w-32 text-center p-4 bg-white/70 backdrop-blur-sm rounded-2xl shadow-md flex flex-col items-center gap-2">
-            <p className="font-bold">{day}</p>
-            <p className="text-sm text-gray-500 -mt-2">{date}</p>
+        <div className="flex-shrink-0 w-32 text-center p-4 bg-white/40 backdrop-blur-md rounded-[2rem] shadow-lg flex flex-col items-center">
+            <p className="font-bold text-slate-700">{day}</p>
+            <p className="text-sm text-slate-500 -mt-1">{date}</p>
 
-            <div className="my-2">
-                <WeatherIcon type={weather} size={48} />
+            <div className="my-3">
+                <WeatherIcon type={weather} size={40} />
             </div>
 
-            <p className="text-sm">{getWeatherText(weather)}</p>
+            <p className="text-xs font-semibold text-slate-600 h-8 flex items-center justify-center">
+                {getWeatherText(weather)}
+            </p>
 
             <div className="text-lg">
-                <span className="font-bold text-red-500">{high}°</span>
-                <span className="text-sm text-gray-500"> / {low}°</span>
+                <span className="font-bold text-slate-800">{high}°</span>
+                <span className="text-sm text-slate-400">/{low}°</span>
             </div>
 
-            <p className="text-sm text-blue-500">{pop}%</p>
+            <p className="text-xs text-cyan-600 font-bold mt-2">{pop}%</p>
         </div>
     );
 }

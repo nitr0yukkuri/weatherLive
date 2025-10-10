@@ -2,6 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+    .text-balance {
+        text-wrap: balance;
+    }
+
+    /* --- アニメーション --- */
+    .animate-fade-in-up {
+        animation: fade-in-up 0.3s ease-out forwards;
+    }
+
+    @keyframes fade-in-up {
+        from {
+            opacity: 0;
+            transform: translateY(10px) translateX(-50%);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) translateX(-50%);
+        }
+    }
+
+    /* --- カスタムスクロールバー --- */
+    .custom-scrollbar::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #e0f2fe;
+        /* sky-100 */
+        border-radius: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #9ca3af;
+        /* gray-400 */
+        border-radius: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #6b7280;
+        /* gray-500 */
+    }
+
+    /* Firefox用 */
+    .custom-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: #9ca3af #e0f2fe;
+    }
+}
+
 :root {
     --foreground-rgb: 0, 0, 0;
     --background-start-rgb: 214, 219, 220;
@@ -20,32 +71,6 @@ body {
     color: rgb(var(--foreground-rgb));
 }
 
-/* グラデーションの定義を淡いピンク系に変更 */
 .colorful-gradient-background {
     background-image: linear-gradient(160deg, #fce4ec 0%, #f8bbd0 100%);
-}
-
-@layer utilities {
-    .text-balance {
-        text-wrap: balance;
-    }
-
-    /* --- ここから追加 --- */
-    .animate-fade-in-up {
-        animation: fade-in-up 0.3s ease-out forwards;
-    }
-
-    @keyframes fade-in-up {
-        from {
-            opacity: 0;
-            transform: translateY(10px) translateX(-50%);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0) translateX(-50%);
-        }
-    }
-
-    /* --- ここまで追加 --- */
 }
