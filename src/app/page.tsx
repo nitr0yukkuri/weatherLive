@@ -74,16 +74,25 @@ export default function TenChanHome() {
             navigator.geolocation.getCurrentPosition(async (position) => {
                 const { latitude, longitude } = position.coords;
                 try {
-                    const response = await fetch(`/api/weather?lat=${latitude}&lon=${longitude}`);
+                    // ★★★ 動作している forecast API を使うように変更 ★★★
+                    const response = await fetch(`/api/weather/forecast?lat=${latitude}&lon=${longitude}`);
                     if (response.ok) {
                         const data = await response.json();
-                        setLocation(data.name || "不明な場所");
-                        setTemperature(Math.round(data.main.temp));
-                        const weatherCode = data.weather[0].main.toLowerCase();
+
+                        // ★★★ forecast API のレスポンス構造に合わせる ★★★
+                        const currentWeather = data.list[0]; // 予報リストの先頭が現在の天気に最も近い
+                        setLocation(data.city.name || "不明な場所");
+                        setTemperature(Math.round(currentWeather.main.temp));
+                        const weatherCode = currentWeather.weather[0].main.toLowerCase();
+
                         if (weatherCode.includes("rain")) setWeather("rainy");
                         else if (weatherCode.includes("snow")) setWeather("snowy");
-                        else if (weatherCode.includes("cloud")) setWeather("cloudy");
+                        else if (weatherCode.includes("clouds")) setWeather("cloudy");
                         else setWeather("sunny");
+                    } else {
+                        const errorData = await response.json();
+                        console.error("Failed to fetch weather data:", errorData.message);
+                        setLocation("天気情報がありません");
                     }
                 } catch (error) {
                     console.error("Failed to fetch weather:", error);

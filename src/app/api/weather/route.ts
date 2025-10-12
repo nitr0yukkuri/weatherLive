@@ -5,28 +5,31 @@ export async function GET(request: Request) {
     const lat = searchParams.get('lat');
     const lon = searchParams.get('lon');
 
-    // APIキーを環境変数から取得
     const apiKey = process.env.NEXT_PUBLIC_WEATHER_API_KEY;
 
     if (!apiKey) {
-        return NextResponse.json({ error: 'APIキーが設定されていません。' }, { status: 500 });
+        return NextResponse.json({ message: 'APIキーが設定されていません。' }, { status: 500 });
     }
-
     if (!lat || !lon) {
-        return NextResponse.json({ error: '緯度または経度が指定されていません。' }, { status: 400 });
+        return NextResponse.json({ message: '緯度または経度が指定されていません。' }, { status: 400 });
     }
 
-    const weatherApiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=ja`;
+    const forecastApiUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=ja`;
 
     try {
-        const response = await fetch(weatherApiUrl);
+        const response = await fetch(forecastApiUrl);
+        const data = await response.json(); // 先にJSONとしてパースを試みる
+
+        // response.okがfalseの場合、OpenWeatherMapからのエラー内容をそのままクライアントに転送する
         if (!response.ok) {
-            throw new Error('天気情報の取得に失敗しました。');
+            console.error('OpenWeatherMap API Error:', data);
+            // APIから返されたエラーメッセージとステータスコードをそのまま利用する
+            return NextResponse.json({ message: data.message || '天気情報の取得に失敗しました。' }, { status: response.status });
         }
-        const data = await response.json();
+
         return NextResponse.json(data);
     } catch (error) {
-        console.error(error);
-        return NextResponse.json({ error: '外部APIへのリクエスト中にエラーが発生しました。' }, { status: 500 });
+        console.error('Internal Server Error:', error);
+        return NextResponse.json({ message: 'サーバー内部でエラーが発生しました。' }, { status: 500 });
     }
 }

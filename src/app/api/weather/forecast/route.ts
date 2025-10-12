@@ -8,25 +8,31 @@ export async function GET(request: Request) {
     const apiKey = process.env.NEXT_PUBLIC_WEATHER_API_KEY;
 
     if (!apiKey) {
-        return NextResponse.json({ error: 'APIキーが設定されていません。' }, { status: 500 });
+        return NextResponse.json({ message: 'APIキーが設定されていません。' }, { status: 500 });
     }
-
     if (!lat || !lon) {
-        return NextResponse.json({ error: '緯度または経度が指定されていません。' }, { status: 400 });
+        return NextResponse.json({ message: '緯度または経度が指定されていません。' }, { status: 400 });
     }
 
-    // ★★★ ここのURLを `2.5/onecall` に変更 ★★★
-    const forecastApiUrl = `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=current,minutely,hourly,alerts&appid=${apiKey}&units=metric&lang=ja`;
+    const forecastApiUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=ja`;
 
     try {
         const response = await fetch(forecastApiUrl);
+
+        // レスポンスがOKでない場合、エラー内容を詳しく調査する
         if (!response.ok) {
-            throw new Error('週間天気予報の取得に失敗しました。');
+            // ★★★ APIからのエラー応答をJSONとして解析し、ログに出力 ★★★
+            const errorData = await response.json();
+            console.error('OpenWeatherMap API Error Response:', errorData);
+            throw new Error(errorData.message || '週間天気予報の取得に失敗しました。');
         }
+
         const data = await response.json();
         return NextResponse.json(data);
-    } catch (error) {
-        console.error(error);
-        return NextResponse.json({ error: '外部APIへのリクエスト中にエラーが発生しました。' }, { status: 500 });
+
+    } catch (error: any) {
+        // エラーメッセージをコンソールに出力
+        console.error('API Route Error:', error.message);
+        return NextResponse.json({ message: error.message || '外部APIへのリクエスト中にエラーが発生しました。' }, { status: 500 });
     }
 }
