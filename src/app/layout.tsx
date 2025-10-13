@@ -1,8 +1,13 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+// M PLUS Rounded 1c フォントをインポート
+import { M_PLUS_Rounded_1c } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+// フォントの設定
+const rounded_mplus = M_PLUS_Rounded_1c({
+    subsets: ["latin"],
+    weight: ["400", "500", "800"], // 必要な太さを指定
+});
 
 export const metadata: Metadata = {
     title: "Create Next App",
@@ -16,7 +21,8 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="ja">
-            <body className={inter.className}>{children}</body>
+            {/* bodyタグにフォントのクラスを適用 */}
+            <body className={rounded_mplus.className}>{children}</body>
         </html>
     );
 }

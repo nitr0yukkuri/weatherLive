@@ -39,7 +39,6 @@ export default function WeatherPage() {
         const fetchWeatherData = async (latitude: number, longitude: number) => {
             setError(null);
             try {
-                // ★★★ 天気予報のAPI呼び出しに一本化 ★★★
                 const forecastResponse = await fetch(`/api/weather/forecast?lat=${latitude}&lon=${longitude}`);
                 const data = await forecastResponse.json();
 
@@ -47,10 +46,8 @@ export default function WeatherPage() {
                     throw new Error(data.message || '予報の取得に失敗しました');
                 }
 
-                // ★★★ 予報データの中から地名を取得してセット ★★★
                 setLocation(data.city.name || "不明な場所");
 
-                // (データ整形部分は変更なし)
                 const dailyForecasts = new Map<string, DailyData>();
                 data.list.forEach((item: any) => {
                     const date = new Date(item.dt * 1000).toLocaleDateString('ja-JP');
@@ -103,34 +100,44 @@ export default function WeatherPage() {
     }, []);
 
     return (
-        <div className="w-full min-h-screen bg-sky-100 flex flex-col">
-            <main className="flex-grow p-6 font-sans text-slate-700">
-                <div className="max-w-md mx-auto">
-                    <Link href="/" className="text-slate-500 mb-6 inline-block text-sm hover:text-slate-700 transition-colors">← もどる</Link>
-                    <header className="mb-8">
-                        <h1 className="text-4xl font-extrabold text-slate-800 tracking-wider">天気予報</h1>
-                        <p className="text-slate-500 mt-1">{location}</p>
-                    </header>
-                    <div className="flex items-center gap-4 p-3 mb-8 bg-cyan-200/30 rounded-3xl">
-                        <CharacterFace mood={error ? 'sad' : 'happy'} />
-                        <div className="bg-white rounded-full px-5 py-2 text-sm shadow">
-                            <p className="text-slate-600">{error ? "あれれ、うまくお天気を調べられなかったみたい..." : "今週の天気を教えるね！"}</p>
+        // ★ 1. トップページと同じ外枠を追加
+        <div className="w-full min-h-screen bg-gray-200 flex items-center justify-center p-4">
+            {/* ★ 2. スマホ風のメインコンテナに変更 */}
+            <main className="w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col text-slate-700 bg-sky-100">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-black/80 rounded-b-xl z-10"></div>
+
+                {/* ★ 3. コンテンツがはみ出た場合にスクロールするエリアを追加 */}
+                <div className="flex-grow overflow-y-auto p-6">
+                    <div className="max-w-md mx-auto">
+                        <Link href="/" className="text-slate-500 mb-6 inline-block text-sm hover:text-slate-700 transition-colors">← もどる</Link>
+
+                        <header className="mb-8">
+                            <h1 className="text-4xl font-extrabold text-slate-800 tracking-wider">天気予報</h1>
+                            <p className="text-slate-500 mt-1">{location}</p>
+                        </header>
+
+                        <div className="flex items-center gap-4 p-4 mb-8 bg-white/60 backdrop-blur-sm rounded-3xl shadow-md">
+                            <CharacterFace mood={error ? 'sad' : 'happy'} />
+                            <p className="text-slate-600 text-sm">{error ? "あれれ、うまくお天気を調べられなかったみたい..." : "今週の天気を教えるね！"}</p>
+                        </div>
+
+                        <div className="flex space-x-4 overflow-x-auto pb-4 custom-scrollbar min-h-[260px]">
+                            {loading ? (
+                                <p className="w-full text-center text-slate-500 pt-20">お天気を調べてるよ...</p>
+                            ) : error ? (
+                                <p className="w-full text-center text-red-500 bg-red-100 p-3 rounded-lg">{error}</p>
+                            ) : (
+                                forecast.map((data, index) => (
+                                    <ForecastCard key={index} {...data} />
+                                ))
+                            )}
                         </div>
                     </div>
-                    <div className="flex space-x-3 overflow-x-auto pb-4 custom-scrollbar min-h-[150px] items-center justify-center">
-                        {loading ? (
-                            <p className="w-full text-center text-slate-500">お天気を調べてるよ...</p>
-                        ) : error ? (
-                            <p className="w-full text-center text-red-500 bg-red-100 p-3 rounded-lg">{error}</p>
-                        ) : (
-                            forecast.map((data, index) => (
-                                <ForecastCard key={index} {...data} />
-                            ))
-                        )}
-                    </div>
                 </div>
+
+                {/* ★ 4. Footerをメインコンテナの末尾に移動 */}
+                <Footer />
             </main>
-            <Footer />
         </div>
     );
 }

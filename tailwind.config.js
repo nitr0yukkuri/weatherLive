@@ -5,23 +5,14 @@ const config = {
         './src/components/**/*.{js,ts,jsx,tsx,mdx}',
         './src/app/**/*.{js,ts,jsx,tsx,mdx}',
     ],
-    // ↓↓↓↓↓↓ ここから追加 ↓↓↓↓↓↓
-    safelist: [
-        'from-gray-800',
-        'to-black',
-        'from-pink-400',
-        'to-indigo-500',
-        'from-pink-200',
-        'to-yellow-200',
-        'to-blue-300',
-        'to-gray-300',
-        'from-pink-100',
-        'to-blue-200',
-        'to-pink-300',
-    ],
-    // ↑↑↑↑↑↑ ここまで追加 ↑↑↑↑↑↑
     theme: {
-        extend: {},
+        extend: {
+            backgroundImage: {
+                // 'bg-main-bg'というクラス名で画像を指定できるようにする
+                // 画像のパスは public/img/background.jpg を想定しています
+                'main-bg': "url('/img/background.jpg')",
+            }
+        },
     },
     plugins: [],
 };
