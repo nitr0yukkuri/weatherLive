@@ -20,6 +20,8 @@ interface DailyData {
     pops: number[];
     weathers: string[];
 }
+// ★ 1. TimeOfDay型を追加
+type TimeOfDay = "morning" | "afternoon" | "evening" | "night";
 
 export default function WeatherPage() {
     const [location, setLocation] = useState('位置情報を取得中...');
@@ -35,17 +37,22 @@ export default function WeatherPage() {
         return "sunny";
     };
 
+    // ★ 2. 時間帯を取得する関数を追加
+    const getTimeOfDay = (date: Date): TimeOfDay => {
+        const hour = date.getHours();
+        if (hour >= 5 && hour < 12) return "morning";
+        if (hour >= 12 && hour < 17) return "afternoon";
+        if (hour >= 17 && hour < 19) return "evening";
+        return "night";
+    };
+
     useEffect(() => {
         const fetchWeatherData = async (latitude: number, longitude: number) => {
             setError(null);
             try {
                 const forecastResponse = await fetch(`/api/weather/forecast?lat=${latitude}&lon=${longitude}`);
                 const data = await forecastResponse.json();
-
-                if (!forecastResponse.ok) {
-                    throw new Error(data.message || '予報の取得に失敗しました');
-                }
-
+                if (!forecastResponse.ok) throw new Error(data.message || '予報の取得に失敗しました');
                 setLocation(data.city.name || "不明な場所");
 
                 const dailyForecasts = new Map<string, DailyData>();
@@ -59,22 +66,29 @@ export default function WeatherPage() {
                     dayData.pops.push(item.pop);
                     dayData.weathers.push(item.weather[0].main);
                 });
+
+                // ★ 3. 現在の時間を取得
+                const timeOfDay = getTimeOfDay(new Date());
+
                 const formattedForecast = Array.from(dailyForecasts.entries()).slice(0, 5).map(([dateStr, dailyData], index) => {
                     const date = new Date(dateStr);
                     const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][date.getDay()];
                     let dayLabel = index === 0 ? '今日' : index === 1 ? '明日' : `${date.getMonth() + 1}/${date.getDate()}`;
-                    const weather = dailyData.weathers.some(w => w.toLowerCase().includes('rain')) ? 'rainy' : mapWeatherType(dailyData.weathers[0]);
+                    let weather = dailyData.weathers.some(w => w.toLowerCase().includes('rain')) ? 'rainy' : mapWeatherType(dailyData.weathers[0]);
+
+                    // ★ 4. 「今日」の天気が「晴れ」で、かつ現在が「夜」なら、天気を "night" に上書き
+                    if (index === 0 && weather === 'sunny' && timeOfDay === 'night') {
+                        weather = 'night';
+                    }
+
                     return {
-                        day: dayLabel,
-                        date: dayOfWeek,
-                        weather: weather,
+                        day: dayLabel, date: dayOfWeek, weather: weather,
                         high: Math.round(Math.max(...dailyData.temps)),
                         low: Math.round(Math.min(...dailyData.temps)),
                         pop: Math.round(Math.max(...dailyData.pops) * 100),
                     };
                 });
                 setForecast(formattedForecast);
-
             } catch (err: any) {
                 console.error("Failed to fetch weather forecast:", err);
                 setError(err.message);
@@ -100,13 +114,10 @@ export default function WeatherPage() {
     }, []);
 
     return (
-        // ★ 1. トップページと同じ外枠を追加
         <div className="w-full min-h-screen bg-gray-200 flex items-center justify-center p-4">
-            {/* ★ 2. スマホ風のメインコンテナに変更 */}
             <main className="w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col text-slate-700 bg-sky-100">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-black/80 rounded-b-xl z-10"></div>
 
-                {/* ★ 3. コンテンツがはみ出た場合にスクロールするエリアを追加 */}
                 <div className="flex-grow overflow-y-auto p-6">
                     <div className="max-w-md mx-auto">
                         <Link href="/" className="text-slate-500 mb-6 inline-block text-sm hover:text-slate-700 transition-colors">← もどる</Link>
@@ -135,7 +146,6 @@ export default function WeatherPage() {
                     </div>
                 </div>
 
-                {/* ★ 4. Footerをメインコンテナの末尾に移動 */}
                 <Footer />
             </main>
         </div>
