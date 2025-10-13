@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
+    "target": "es5", // es5に変更
     "lib": [
       "dom",
       "dom.iterable",
@@ -11,9 +11,9 @@
     "strict": false,
     "noEmit": true,
     "incremental": true,
-    "module": "esnext",
     "esModuleInterop": true,
-    "moduleResolution": "node",
+    "module": "esnext",
+    "moduleResolution": "bundler", // ★ "node"から"bundler"に変更
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",

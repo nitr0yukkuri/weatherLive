@@ -1,159 +1,54 @@
-'use client';
-
-import { useEffect, useState } from 'react';
-import CharacterFace from './components/CharacterFace';
-import WeatherIcon from './components/WeatherIcon';
-import Footer from './components/Footer';
+import { headers } from 'next/headers';
+import TenChanHomeClient from './components/TenChanHomeClient';
 
 // 型定義
 type WeatherType = "sunny" | "rainy" | "cloudy" | "snowy";
-type TimeOfDay = "morning" | "afternoon" | "evening" | "night";
 
-interface PetState {
-    name: string;
-    level: number;
-    happiness: number;
-    hunger: number;
-    lastFed: number;
+// サーバーサイドで天気データを取得する関数
+async function getInitialWeatherData(lat: string, lon: string) {
+    const apiKey = process.env.NEXT_PUBLIC_WEATHER_API_KEY;
+    if (!apiKey || !lat || !lon) return null;
+
+    const forecastApiUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=ja`;
+
+    try {
+        const response = await fetch(forecastApiUrl, { next: { revalidate: 600 } });
+        if (!response.ok) return null;
+        const data = await response.json();
+        const currentWeather = data.list[0];
+
+        const weatherCode = currentWeather.weather[0].main.toLowerCase();
+        let weather: WeatherType = "sunny";
+        if (weatherCode.includes("rain")) weather = "rainy";
+        else if (weatherCode.includes("snow")) weather = "snowy";
+        else if (weatherCode.includes("clouds")) weather = "cloudy";
+
+        return {
+            location: data.city.name || "どこかの場所",
+            temperature: Math.round(currentWeather.main.temp),
+            weather: weather,
+        };
+    } catch (error) {
+        console.error("Failed to fetch initial weather:", error);
+        return null;
+    }
 }
 
-export default function TenChanHome() {
-    // 州の管理
-    const [weather, setWeather] = useState<WeatherType>("sunny");
-    const [currentTime, setCurrentTime] = useState(new Date());
-    const [temperature, setTemperature] = useState<number | null>(null);
-    const [petState, setPetState] = useState<PetState>({
-        name: "てんちゃん",
-        level: 1,
-        happiness: 80,
-        hunger: 60,
-        lastFed: Date.now(),
-    });
-    const [location, setLocation] = useState<string | null>("場所を探しています...");
-    const [isClient, setIsClient] = useState(false);
+// page.tsxはサーバーコンポーネント
+export default async function TenChanHomePage() {
+    // ★★★★★ ここに await を追加 ★★★★★
+    const headersList = await headers();
+    // ★★★★★★★★★★★★★★★★★★★★★★★
 
-    // 時間帯を取得する関数
-    const getTimeOfDay = (date: Date): TimeOfDay => {
-        const hour = date.getHours();
-        if (hour >= 5 && hour < 12) return "morning";
-        if (hour >= 12 && hour < 17) return "afternoon";
-        if (hour >= 17 && hour < 20) return "evening";
-        return "night";
-    };
+    // Vercel環境でIPから緯度経度を取得 (ローカルでは大阪にフォールバック)
+    const lat = headersList.get('x-vercel-ip-latitude') || '34.6864';
+    const lon = headersList.get('x-vercel-ip-longitude') || '135.5200';
 
-    // 背景のグラデーションを動的に変更する関数
-    const getBackgroundStyle = () => {
-        const time = getTimeOfDay(currentTime);
-
-        if (time === "night") {
-            return "bg-gradient-to-b from-gray-800 to-black";
-        }
-        if (time === "evening") {
-            return "bg-gradient-to-b from-pink-400 to-indigo-500";
-        }
-
-        switch (weather) {
-            case "sunny":
-                return "bg-gradient-to-b from-pink-200 to-yellow-200";
-            case "rainy":
-                return "bg-gradient-to-b from-pink-200 to-blue-300";
-            case "cloudy":
-                return "bg-gradient-to-b from-pink-200 to-gray-300";
-            case "snowy":
-                return "bg-gradient-to-b from-pink-100 to-blue-200";
-            default:
-                return "bg-gradient-to-b from-pink-200 to-pink-300";
-        }
-    };
-
-    // クライアントサイドでのみ実行する処理
-    useEffect(() => {
-        setIsClient(true);
-
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(async (position) => {
-                const { latitude, longitude } = position.coords;
-                try {
-                    // ★★★ 動作している forecast API を使うように変更 ★★★
-                    const response = await fetch(`/api/weather/forecast?lat=${latitude}&lon=${longitude}`);
-                    if (response.ok) {
-                        const data = await response.json();
-
-                        // ★★★ forecast API のレスポンス構造に合わせる ★★★
-                        const currentWeather = data.list[0]; // 予報リストの先頭が現在の天気に最も近い
-                        setLocation(data.city.name || "不明な場所");
-                        setTemperature(Math.round(currentWeather.main.temp));
-                        const weatherCode = currentWeather.weather[0].main.toLowerCase();
-
-                        if (weatherCode.includes("rain")) setWeather("rainy");
-                        else if (weatherCode.includes("snow")) setWeather("snowy");
-                        else if (weatherCode.includes("clouds")) setWeather("cloudy");
-                        else setWeather("sunny");
-                    } else {
-                        const errorData = await response.json();
-                        console.error("Failed to fetch weather data:", errorData.message);
-                        setLocation("天気情報がありません");
-                    }
-                } catch (error) {
-                    console.error("Failed to fetch weather:", error);
-                    setLocation("天気情報がありません");
-                }
-            });
-        }
-
-        const timer = setInterval(() => setCurrentTime(new Date()), 60000);
-        const hungerTimer = setInterval(() => {
-            setPetState((prev) => ({
-                ...prev,
-                hunger: Math.max(0, prev.hunger - 1),
-                happiness: prev.hunger > 20 ? prev.happiness : Math.max(0, prev.happiness - 1),
-            }));
-        }, 60000 * 5);
-
-        return () => {
-            clearInterval(timer);
-            clearInterval(hungerTimer);
-        };
-    }, []);
-
-    const getPetMood = (): "happy" | "neutral" | "sad" => {
-        if (petState.happiness > 70) return "happy";
-        if (petState.happiness > 40) return "neutral";
-        return "sad";
-    };
+    // サーバーサイドで初期データを取得
+    const initialWeatherData = await getInitialWeatherData(lat, lon);
 
     return (
-        <div className="w-full min-h-screen bg-gray-200 flex items-center justify-center p-4">
-            <main className={`w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col text-[#5D4037] ${getBackgroundStyle()}`}>
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-black/80 rounded-b-xl z-10"></div>
-
-                <div className="pt-8 text-center">
-                    <div className="flex flex-col items-center gap-2">
-                        <WeatherIcon type={weather} size={96} />
-                        <div className="flex items-center justify-center gap-2 text-sm text-[#5D4037]/80">
-                            {isClient && (
-                                <span>{currentTime.getHours().toString().padStart(2, '0')}:{currentTime.getMinutes().toString().padStart(2, '0')}</span>
-                            )}
-                            {temperature !== null && <span>・{temperature}°C</span>}
-                            {location && <span>・{location}</span>}
-                        </div>
-                    </div>
-                </div>
-
-                <div className="flex-grow flex flex-col items-center justify-center gap-y-4 p-3 text-center pb-20">
-                    <div className="w-64 h-64 rounded-full bg-white/30 p-2 shadow-inner backdrop-blur-sm">
-                        <div className="w-full h-full rounded-full border-[3px] border-white/60 flex items-center justify-center">
-                            <CharacterFace mood={getPetMood()} />
-                        </div>
-                    </div>
-
-                    <div>
-                        <h1 className="text-2xl font-bold backdrop-blur-sm bg-white/30 rounded-lg px-4 py-1">{petState.name}</h1>
-                    </div>
-                </div>
-
-                <Footer />
-            </main>
-        </div>
+        // 取得した初期データをクライアントコンポーネントに渡す
+        <TenChanHomeClient initialData={initialWeatherData} />
     );
 }
