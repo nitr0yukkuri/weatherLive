@@ -41,6 +41,18 @@ export default function TenChanHomeClient({ initialData }) {
 
     const timeOfDay = getTimeOfDay(currentTime);
 
+    // ★ 1. 天候をデバッグ切り替えする関数を追加
+    const cycleWeather = () => {
+        setWeather(prevWeather => {
+            if (prevWeather === "sunny") return "cloudy";
+            if (prevWeather === "cloudy") return "rainy";
+            if (prevWeather === "rainy") return "snowy";
+            if (prevWeather === "snowy") return "sunny";
+            // 初期状態や読み込み中の場合は晴れからスタート
+            return "sunny";
+        });
+    };
+
     useEffect(() => {
         setIsClient(true);
         // ↓↓↓ ここからが変更点です ↓↓↓
@@ -118,7 +130,8 @@ export default function TenChanHomeClient({ initialData }) {
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-black/80 rounded-b-xl z-10"></div>
 
                 <div className="pt-8 text-center h-[150px] flex flex-col justify-center">
-                    <div className="flex flex-col items-center gap-2">
+                    {/* ★ 2. デバッグ用クリックハンドラを適用するラッパーを追加 */}
+                    <div className="flex flex-col items-center gap-2 cursor-pointer" onClick={cycleWeather}>
                         {weather ? (
                             <>
                                 {timeOfDay === 'night' ? (
