@@ -2,21 +2,21 @@
 
 import { useState } from 'react';
 import NavItem from './NavItem';
-// ★ 必要なアイコンをすべて正しいパスからインポート
+// BsCollectionFillを再インポート
 import { BsCloud, BsCollectionFill } from 'react-icons/bs';
 import { MdDirectionsWalk } from 'react-icons/md';
 import { IoSettingsSharp } from 'react-icons/io5';
-import { FaSeedling } from 'react-icons/fa';
+import { FaSeedling } from 'react-icons/fa'; // 実績のアイコンはそのままFaSeedlingを使います
 
 export default function Footer() {
     const [activePage, setActivePage] = useState('コレクション');
 
     const navItems = [
         { name: '天気予報', href: '/weather', icon: <BsCloud size={28} /> },
-        { name: 'おさんぽ', href: '#', icon: <MdDirectionsWalk size={28} /> },
-        // コレクション: BsCollectionFill、hasNotificationプロパティなし
+        // ★ リンク先を '/walk' に修正
+        { name: 'おさんぽ', href: '/walk', icon: <MdDirectionsWalk size={28} /> },
+        // hasNotificationを削除
         { name: 'コレクション', href: '#', icon: <BsCollectionFill size={28} /> },
-        // 実績: FaSeedling、hasNotificationプロパティなし
         { name: '実績', href: '#', icon: <FaSeedling size={28} /> },
         { name: '設定', href: '#', icon: <IoSettingsSharp size={28} /> },
     ];
@@ -32,8 +32,7 @@ export default function Footer() {
                         label={item.name}
                         isActive={activePage === item.name}
                         onClick={() => setActivePage(item.name)}
-                    // ★ エラーを解消するため、item.hasNotificationの渡しを削除します
-                    // hasNotificationプロパティはNavItemコンポーネント内でデフォルト値(false)が適用されます
+                    // ★ hasNotificationの渡しを削除 (エラー対応)
                     />
                 ))}
             </nav>

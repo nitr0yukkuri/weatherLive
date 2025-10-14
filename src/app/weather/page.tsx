@@ -56,27 +56,27 @@ const getTimeOfDay = (date: Date): TimeOfDay => {
     return "night";
 };
 
-// ★ 背景色決定ロジックを修正: nightとsnowyのケースを追加
+// 背景色決定ロジック
 const getBackgroundColorClass = (weatherType: string | undefined): string => {
     if (!weatherType) return 'bg-sky-200';
 
     switch (weatherType) {
         case 'sunny':
-        case 'night': // 夜間も晴れと同じ色で扱う
-            return 'bg-orange-200'; // 晴れの場合はオレンジ系
+        case 'night':
+            return 'bg-orange-200';
         case 'rainy':
-            return 'bg-blue-200'; // 雨の場合は青系
+            return 'bg-blue-200';
         case 'cloudy':
-        case 'partlyCloudy': // 曇りの場合
-            return 'bg-gray-200'; // グレー系
+        case 'partlyCloudy':
+            return 'bg-gray-200';
         case 'snowy':
-            return 'bg-sky-100'; // 雪は明るい空色系
+            return 'bg-sky-100';
         default:
-            return 'bg-sky-200'; // その他は空色
+            return 'bg-sky-200';
     }
 };
 
-// メッセージ生成ロジック
+// メッセージ生成ロジック (循環表示)
 const generateAdviceMessage = (data: { day: string; weather: string; high: number; low: number; pop: number }, index: number): string => {
     const { day, weather, high, low, pop } = data;
     const weatherText = getWeatherText(weather);
@@ -118,7 +118,7 @@ const generateAdviceMessage = (data: { day: string; weather: string; high: numbe
 // ★ 3. メインコンポーネント本体
 // ===================================
 export default function WeatherPage() {
-    // --- State定義 ---
+    // --- State定義 (短縮) ---
     const [location, setLocation] = useState('位置情報を取得中...');
     const [forecast, setForecast] = useState<Forecast[]>([]);
     const [loading, setLoading] = useState(true);
@@ -143,7 +143,7 @@ export default function WeatherPage() {
     }, [messageIndex]);
 
 
-    // --- データ取得ロジック ---
+    // --- データ取得ロジック (useEffect内に集約) ---
     useEffect(() => {
         const fetchWeatherData = async (latitude: number, longitude: number) => {
             setError(null);
@@ -217,7 +217,7 @@ export default function WeatherPage() {
     }, [handleInitialMessage]);
 
 
-    // --- UIレンダリング ---
+    // --- UIレンダリング (短縮) ---
     const todayWeather = forecast.length > 0 ? forecast[0].weather : undefined;
     const dynamicBackgroundClass = getBackgroundColorClass(todayWeather);
 
