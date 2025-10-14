@@ -43,31 +43,52 @@ export default function TenChanHomeClient({ initialData }) {
 
     useEffect(() => {
         setIsClient(true);
-        setTimeout(() => {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(async (position) => {
-                    const { latitude, longitude } = position.coords;
-                    try {
-                        const response = await fetch(`/api/weather/forecast?lat=${latitude}&lon=${longitude}`);
-                        if (response.ok) {
-                            const data = await response.json();
-                            const currentWeather = data.list[0];
-                            setLocation(data.city.name || "不明な場所");
-                            setTemperature(Math.round(currentWeather.main.temp));
-                            const weatherCode = currentWeather.weather[0].main.toLowerCase();
+        // ↓↓↓ ここからが変更点です ↓↓↓
+        setWeather(null); // まずローディング表示に切り替え
 
-                            if (weatherCode.includes("rain")) setWeather("rainy");
-                            else if (weatherCode.includes("snow")) setWeather("snowy");
-                            else if (weatherCode.includes("clouds")) setWeather("cloudy");
-                            else setWeather("sunny");
+        const fetchTimeout = setTimeout(() => {
+            const fallbackToInitialData = () => {
+                if (initialData) {
+                    setWeather(initialData.weather);
+                    setTemperature(initialData.temperature);
+                    setLocation(initialData.location);
+                }
+            };
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    async (position) => {
+                        const { latitude, longitude } = position.coords;
+                        try {
+                            const response = await fetch(`/api/weather/forecast?lat=${latitude}&lon=${longitude}`);
+                            if (response.ok) {
+                                const data = await response.json();
+                                const currentWeather = data.list[0];
+                                setLocation(data.city.name || "不明な場所");
+                                setTemperature(Math.round(currentWeather.main.temp));
+                                const weatherCode = currentWeather.weather[0].main.toLowerCase();
+
+                                if (weatherCode.includes("rain")) setWeather("rainy");
+                                else if (weatherCode.includes("snow")) setWeather("snowy");
+                                else if (weatherCode.includes("clouds")) setWeather("cloudy");
+                                else setWeather("sunny");
+                            } else {
+                                fallbackToInitialData();
+                            }
+                        } catch (error) {
+                            console.error("Failed to fetch weather on client:", error);
+                            fallbackToInitialData();
                         }
-                    } catch (error) {
-                        console.error("Failed to fetch weather on client:", error);
+                    },
+                    () => {
+                        fallbackToInitialData();
                     }
-                });
+                );
+            } else {
+                fallbackToInitialData();
             }
         }, 1000);
-
+        // ↑↑↑ ここまでが変更点です ↑↑↑
 
         const timer = setInterval(() => setCurrentTime(new Date()), 60000);
         const hungerTimer = setInterval(() => {
@@ -79,6 +100,7 @@ export default function TenChanHomeClient({ initialData }) {
         }, 60000 * 5);
 
         return () => {
+            clearTimeout(fetchTimeout); // clearTimeoutを追加
             clearInterval(timer);
             clearInterval(hungerTimer);
         };
@@ -119,7 +141,6 @@ export default function TenChanHomeClient({ initialData }) {
                 </div>
 
                 <div className="flex-grow flex flex-col items-center justify-center gap-y-4 p-3 text-center pb-20">
-                    {/* ↓↓↓ 顔のサイズを小さくしました ↓↓↓ */}
                     <div className="w-40 h-40 rounded-full bg-white p-2">
                         <div className="w-full h-full rounded-full flex items-center justify-center">
                             <CharacterFace mood={getPetMood()} />
@@ -127,7 +148,7 @@ export default function TenChanHomeClient({ initialData }) {
                     </div>
 
                     <div>
-                        <h1 className="text-xl font-bold backdrop-blur-sm bg-white/30 rounded-lg px-4 py-1">{petState.name}</h1>
+                        <h1 className="text-4xl font-bold backdrop-blur-sm bg-white/30 rounded-lg px-4 py-1">{petState.name}</h1>
                     </div>
                 </div>
 

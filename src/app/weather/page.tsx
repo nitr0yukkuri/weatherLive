@@ -20,7 +20,6 @@ interface DailyData {
     pops: number[];
     weathers: string[];
 }
-// ★ 1. TimeOfDay型を追加
 type TimeOfDay = "morning" | "afternoon" | "evening" | "night";
 
 export default function WeatherPage() {
@@ -37,7 +36,6 @@ export default function WeatherPage() {
         return "sunny";
     };
 
-    // ★ 2. 時間帯を取得する関数を追加
     const getTimeOfDay = (date: Date): TimeOfDay => {
         const hour = date.getHours();
         if (hour >= 5 && hour < 12) return "morning";
@@ -67,7 +65,6 @@ export default function WeatherPage() {
                     dayData.weathers.push(item.weather[0].main);
                 });
 
-                // ★ 3. 現在の時間を取得
                 const timeOfDay = getTimeOfDay(new Date());
 
                 const formattedForecast = Array.from(dailyForecasts.entries()).slice(0, 5).map(([dateStr, dailyData], index) => {
@@ -76,7 +73,6 @@ export default function WeatherPage() {
                     let dayLabel = index === 0 ? '今日' : index === 1 ? '明日' : `${date.getMonth() + 1}/${date.getDate()}`;
                     let weather = dailyData.weathers.some(w => w.toLowerCase().includes('rain')) ? 'rainy' : mapWeatherType(dailyData.weathers[0]);
 
-                    // ★ 4. 「今日」の天気が「晴れ」で、かつ現在が「夜」なら、天気を "night" に上書き
                     if (index === 0 && weather === 'sunny' && timeOfDay === 'night') {
                         weather = 'night';
                     }
@@ -128,7 +124,10 @@ export default function WeatherPage() {
                         </header>
 
                         <div className="flex items-center gap-4 p-4 mb-8 bg-white/60 backdrop-blur-sm rounded-3xl shadow-md">
-                            <CharacterFace mood={error ? 'sad' : 'happy'} />
+                            {/* ↓↓↓ このdivで顔のサイズを小さくしました ↓↓↓ */}
+                            <div className="w-16 h-16 flex-shrink-0">
+                                <CharacterFace mood={error ? 'sad' : 'happy'} />
+                            </div>
                             <p className="text-slate-600 text-sm">{error ? "あれれ、うまくお天気を調べられなかったみたい..." : "今週の天気を教えるね！"}</p>
                         </div>
 
