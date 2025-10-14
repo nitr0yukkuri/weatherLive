@@ -1,10 +1,12 @@
 'use client';
 
-// moodプロパティを受け取るように変更
-export default function CharacterFace({ mood = "happy" }: { mood?: "happy" | "neutral" | "sad" }) {
+import { motion, AnimatePresence } from 'framer-motion';
 
-    // moodに応じて口の形を変更する関数
+// ★ 1. onClickプロパティを受け取れるように型定義を変更
+export default function CharacterFace({ mood = "happy", onClick }: { mood?: "happy" | "neutral" | "sad", onClick?: () => void }) {
+
     const getMouthPath = () => {
+        // ( ... この関数は変更なし ... )
         switch (mood) {
             case "happy":
                 return "M 45 75 Q 60 90 75 75";
@@ -18,19 +20,54 @@ export default function CharacterFace({ mood = "happy" }: { mood?: "happy" | "ne
     };
 
     return (
-        <svg viewBox="0 0 120 120" width="100%" height="100%">
-            {/* 顔の白い背景は維持します */}
-            <circle cx="60" cy="60" r="60" fill="white" />
-
-            {/* ↓↓↓ 目、頬、口をすべて元のデザインに戻しました ↓↓↓ */}
-            {/* Blush */}
-            <circle cx="20" cy="70" r="12" fill="#F8BBD0" />
-            <circle cx="100" cy="70" r="12" fill="#F8BBD0" />
-            {/* Eyes */}
-            <circle cx="40" cy="55" r="5" fill="#5D4037" />
-            <circle cx="80" cy="55" r="5" fill="#5D4037" />
-            {/* Mouth */}
-            <path d={getMouthPath()} stroke="#5D4037" strokeWidth="5" fill="none" strokeLinecap="round" />
-        </svg>
+        <motion.div
+            style={{ width: '100%', height: '100%', cursor: 'pointer' }}
+            whileTap={{ scale: 0.9 }}
+            transition={{ type: "spring", stiffness: 400, damping: 15 }}
+            // ★ 2. 受け取ったonClickイベントをここに設定
+            onClick={onClick}
+        >
+            <motion.svg
+                viewBox="0 0 120 120"
+                width="100%"
+                height="100%"
+                animate={{
+                    y: ["-3%", "3%"],
+                    rotate: [-2, 2, -2]
+                }}
+                transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    repeatType: "mirror",
+                    ease: "easeInOut"
+                }}
+            >
+                {/* ( ... SVGの中身は変更なし ... ) */}
+                <circle cx="60" cy="60" r="60" fill="white" />
+                <circle cx="20" cy="70" r="12" fill="#F8BBD0" />
+                <circle cx="100" cy="70" r="12" fill="#F8BBD0" />
+                <motion.g
+                    animate={{ scaleY: [1, 0.1, 1, 1, 1] }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", repeatDelay: 1 }}
+                >
+                    <circle cx="40" cy="55" r="5" fill="#5D4037" />
+                    <circle cx="80" cy="55" r="5" fill="#5D4037" />
+                </motion.g>
+                <AnimatePresence mode="wait">
+                    <motion.path
+                        key={mood}
+                        d={getMouthPath()}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        stroke="#5D4037"
+                        strokeWidth="5"
+                        fill="none"
+                        strokeLinecap="round"
+                    />
+                </AnimatePresence>
+            </motion.svg>
+        </motion.div>
     );
 }
