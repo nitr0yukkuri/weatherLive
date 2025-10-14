@@ -1,4 +1,4 @@
-'use client'; // 👈 この行があるか、もう一度ご確認ください。
+'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
 import CharacterFace from './CharacterFace';
@@ -11,7 +11,6 @@ type CharacterDisplayProps = {
 };
 
 export default function CharacterDisplay({ petName, mood, message, onCharacterClick }: CharacterDisplayProps) {
-    // (以下、変更なし)
     return (
         <div className="flex-grow flex flex-col items-center justify-center gap-y-4 p-3 text-center pb-20 relative">
             <AnimatePresence>

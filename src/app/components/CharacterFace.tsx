@@ -1,4 +1,4 @@
-'use client'; // 👈 この一行を追加して保存してください。
+'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
 

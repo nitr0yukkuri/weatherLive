@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import Footer from './Footer';
-import WeatherDisplay from './WeatherDisplay'; // ★ インポート
-import CharacterDisplay from './CharacterDisplay'; // ★ インポート
+import WeatherDisplay from './WeatherDisplay';
+import CharacterDisplay from './CharacterDisplay';
 
-// ( ... 型定義やセリフ集は変更なし ... )
 type WeatherType = "sunny" | "rainy" | "cloudy" | "snowy";
 type TimeOfDay = "morning" | "afternoon" | "evening" | "night";
 
@@ -23,7 +22,6 @@ const conversationMessages = [
 ];
 
 export default function TenChanHomeClient({ initialData }) {
-    // ( ... Stateやロジック部分はこれまで通り ... )
     const [weather, setWeather] = useState<WeatherType | null>(initialData?.weather || null);
     const [currentTime, setCurrentTime] = useState(new Date());
     const [temperature, setTemperature] = useState<number | null>(initialData?.temperature || null);
@@ -60,8 +58,21 @@ export default function TenChanHomeClient({ initialData }) {
     };
 
     useEffect(() => {
-        // ... useEffectの中身は変更なし
-    }, [initialData]);
+        setIsClient(true);
+        const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+        const hungerTimer = setInterval(() => {
+            setPetState((prev) => ({
+                ...prev,
+                hunger: Math.max(0, prev.hunger - 1),
+                happiness: prev.hunger > 20 ? prev.happiness : Math.max(0, prev.happiness - 1),
+            }));
+        }, 60000 * 5);
+
+        return () => {
+            clearInterval(timer);
+            clearInterval(hungerTimer);
+        };
+    }, []);
 
     const getPetMood = (): "happy" | "neutral" | "sad" => {
         if (petState.happiness > 70) return "happy";
@@ -74,7 +85,6 @@ export default function TenChanHomeClient({ initialData }) {
             <main className={`w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col text-[#5D4037] bg-main-bg bg-cover bg-center`}>
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-black/80 rounded-b-xl z-10"></div>
 
-                {/* ★ ここからが変更点！ UI部分がコンポーネントに置き換わりました */}
                 <WeatherDisplay
                     weather={weather}
                     timeOfDay={timeOfDay}
@@ -91,7 +101,6 @@ export default function TenChanHomeClient({ initialData }) {
                     message={message}
                     onCharacterClick={handleCharacterClick}
                 />
-                {/* ★ ここまで */}
 
                 <Footer />
             </main>
