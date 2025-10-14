@@ -27,6 +27,7 @@ export default function WeatherPage() {
     const [forecast, setForecast] = useState<Forecast[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [selectedDayMessage, setSelectedDayMessage] = useState<string | null>(null);
 
     const mapWeatherType = (weatherCode: string): string => {
         const code = weatherCode.toLowerCase();
@@ -36,6 +37,42 @@ export default function WeatherPage() {
         return "sunny";
     };
 
+    const getWeatherText = (weatherType: string): string => {
+        switch (weatherType) {
+            case 'partlyCloudy': return '晴れ時々くもり';
+            case 'cloudy': return 'くもり';
+            case 'sunny': return '晴れ';
+            case 'rainy': return '雨';
+            case 'snowy': return '雪';
+            case 'night': return '夜';
+            default: return '晴れ';
+        }
+    };
+
+    // ★ 1. 天気に基づいたアドバイスメッセージを生成する関数 (変更なし)
+    const generateAdviceMessage = (data: { day: string; weather: string; high: number; low: number; pop: number }): string => {
+        const { day, weather, high, low, pop } = data;
+        const weatherText = getWeatherText(weather);
+
+        // 優先度1: 降水確率のチェック (50%以上)
+        if (pop >= 50) {
+            return `☔ ${day}は雨が降るみたい！傘を忘れないでね。`;
+        }
+
+        // 優先度2: 高温のチェック (25℃以上)
+        if (high >= 25) {
+            return `🥵 ${day}は${high}°Cまで上がるよ！半袖のほうがいいかも。`;
+        }
+
+        // 優先度3: 低温のチェック (5℃以下)
+        if (low <= 5) {
+            return `🥶 ${day}は${low}°Cまで下がるよ...。しっかり防寒してね。`;
+        }
+
+        // デフォルト: 天気の詳細
+        return `${day}の天気は${weatherText}だよ。最高${high}°C、最低${low}°C。`;
+    };
+
     const getTimeOfDay = (date: Date): TimeOfDay => {
         const hour = date.getHours();
         if (hour >= 5 && hour < 12) return "morning";
@@ -43,6 +80,39 @@ export default function WeatherPage() {
         if (hour >= 17 && hour < 19) return "evening";
         return "night";
     };
+
+    // ★ 2. 天気タイプに基づいて背景色クラスを返す新しい関数
+    const getBackgroundColorClass = (weatherType: string | undefined): string => {
+        if (!weatherType) return 'bg-sky-200'; // データがない場合はデフォルト
+
+        switch (weatherType) {
+            case 'sunny':
+                return 'bg-orange-200'; // 晴れの場合はオレンジ系
+            case 'rainy':
+                return 'bg-blue-200'; // 雨の場合は青系
+            case 'cloudy':
+            case 'partlyCloudy':
+                return 'bg-gray-200'; // 曇りの場合はグレー系
+            case 'night':
+            case 'snowy':
+            default:
+                return 'bg-sky-200'; // その他は空色
+        }
+    };
+
+    const handleInitialMessage = (data: Forecast[]) => {
+        if (data.length > 0) {
+            // 今日の天気に基づいた初期メッセージを設定
+            const todayData = data[0];
+            const initialMessage = generateAdviceMessage(todayData);
+            setSelectedDayMessage(initialMessage);
+        }
+    }
+
+    const handleCardClick = (data: { day: string; weather: string; high: number; low: number; pop: number }) => {
+        const message = generateAdviceMessage(data);
+        setSelectedDayMessage(message);
+    }
 
     useEffect(() => {
         const fetchWeatherData = async (latitude: number, longitude: number) => {
@@ -85,10 +155,12 @@ export default function WeatherPage() {
                     };
                 });
                 setForecast(formattedForecast);
+                handleInitialMessage(formattedForecast); // 初期メッセージを設定
             } catch (err: any) {
                 console.error("Failed to fetch weather forecast:", err);
                 setError(err.message);
                 setLocation("天気情報の取得に失敗");
+                setSelectedDayMessage("あれれ、うまくお天気を調べられなかったみたい..."); // エラー時のメッセージ
             } finally {
                 setLoading(false);
             }
@@ -101,17 +173,24 @@ export default function WeatherPage() {
                     setLocation("位置情報が取得できませんでした");
                     setError("位置情報の取得を許可してください。");
                     setLoading(false);
+                    setSelectedDayMessage("位置情報の取得を許可してね..."); // 位置情報エラー時のメッセージ
                 }
             );
         } else {
             setLocation("位置情報機能が利用できません");
             setLoading(false);
+            setSelectedDayMessage("この端末では位置情報機能が利用できません。");
         }
     }, []);
 
+    // ★ 3. 今日の天気に基づいて背景色クラスを取得
+    const todayWeather = forecast.length > 0 ? forecast[0].weather : undefined;
+    const dynamicBackgroundClass = getBackgroundColorClass(todayWeather);
+
     return (
         <div className="w-full min-h-screen bg-gray-200 flex items-center justify-center p-4">
-            <main className="w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col text-slate-700 bg-sky-100">
+            {/* ★ 4. 動的に生成した背景色クラスを適用 */}
+            <main className={`w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col text-slate-700 transition-colors duration-500 ${dynamicBackgroundClass}`}>
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-black/80 rounded-b-xl z-10"></div>
 
                 <div className="flex-grow overflow-y-auto p-6">
@@ -124,11 +203,12 @@ export default function WeatherPage() {
                         </header>
 
                         <div className="flex items-center gap-4 p-4 mb-8 bg-white/60 backdrop-blur-sm rounded-3xl shadow-md">
-                            {/* ↓↓↓ このdivで顔のサイズを小さくしました ↓↓↓ */}
                             <div className="w-16 h-16 flex-shrink-0">
                                 <CharacterFace mood={error ? 'sad' : 'happy'} />
                             </div>
-                            <p className="text-slate-600 text-sm">{error ? "あれれ、うまくお天気を調べられなかったみたい..." : "今週の天気を教えるね！"}</p>
+                            <p className="text-slate-600 text-sm">
+                                {selectedDayMessage || "お天気を調べてるよ..."}
+                            </p>
                         </div>
 
                         <div className="flex space-x-4 overflow-x-auto pb-4 custom-scrollbar min-h-[260px]">
@@ -138,7 +218,11 @@ export default function WeatherPage() {
                                 <p className="w-full text-center text-red-500 bg-red-100 p-3 rounded-lg">{error}</p>
                             ) : (
                                 forecast.map((data, index) => (
-                                    <ForecastCard key={index} {...data} />
+                                    <ForecastCard
+                                        key={index}
+                                        {...data}
+                                        onClick={handleCardClick}
+                                    />
                                 ))
                             )}
                         </div>
