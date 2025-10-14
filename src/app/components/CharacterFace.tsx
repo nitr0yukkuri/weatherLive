@@ -1,12 +1,10 @@
-'use client';
+'use client'; // 👈 この一行を追加して保存してください。
 
 import { motion, AnimatePresence } from 'framer-motion';
 
-// ★ 1. onClickプロパティを受け取れるように型定義を変更
 export default function CharacterFace({ mood = "happy", onClick }: { mood?: "happy" | "neutral" | "sad", onClick?: () => void }) {
 
     const getMouthPath = () => {
-        // ( ... この関数は変更なし ... )
         switch (mood) {
             case "happy":
                 return "M 45 75 Q 60 90 75 75";
@@ -24,7 +22,6 @@ export default function CharacterFace({ mood = "happy", onClick }: { mood?: "hap
             style={{ width: '100%', height: '100%', cursor: 'pointer' }}
             whileTap={{ scale: 0.9 }}
             transition={{ type: "spring", stiffness: 400, damping: 15 }}
-            // ★ 2. 受け取ったonClickイベントをここに設定
             onClick={onClick}
         >
             <motion.svg
@@ -42,7 +39,6 @@ export default function CharacterFace({ mood = "happy", onClick }: { mood?: "hap
                     ease: "easeInOut"
                 }}
             >
-                {/* ( ... SVGの中身は変更なし ... ) */}
                 <circle cx="60" cy="60" r="60" fill="white" />
                 <circle cx="20" cy="70" r="12" fill="#F8BBD0" />
                 <circle cx="100" cy="70" r="12" fill="#F8BBD0" />
