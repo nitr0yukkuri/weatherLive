@@ -4,8 +4,7 @@ import { useRouter } from 'next/navigation';
 
 export default function NavItem({ icon, label, isActive, onClick, hasNotification = false, href }) {
     const router = useRouter();
-    // ↓↓↓ 落ち着いたグレー系に変更しました ↓↓↓
-    const textColor = isActive ? 'text-slate-600' : 'text-slate-800';
+    const textColor = isActive ? 'text-amber-600' : 'text-amber-800';
 
     const handleClick = () => {
         if (onClick) {
@@ -22,13 +21,13 @@ export default function NavItem({ icon, label, isActive, onClick, hasNotificatio
                 {icon}
                 {hasNotification && (
                     <div className="absolute -top-1 -right-1 flex">
-                        {/* ↓↓↓ 通知ドットの色もグレー系に変更しました ↓↓↓ */}
-                        <span className="h-2 w-2 rounded-full bg-slate-300"></span>
-                        <span className="h-2 w-2 rounded-full bg-slate-400 -ml-1"></span>
+                        <span className="h-2 w-2 rounded-full bg-amber-300"></span>
+                        <span className="h-2 w-2 rounded-full bg-amber-400 -ml-1"></span>
                     </div>
                 )}
             </div>
-            <span className="text-sm font-medium">{label}</span>
+            {/* ↓↓↓ ここの文字サイズを小さくしました ↓↓↓ */}
+            <span className="text-xs font-medium">{label}</span>
         </button>
     );
 };
