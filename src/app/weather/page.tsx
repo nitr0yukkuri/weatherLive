@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import CharacterFace from '../components/CharacterFace';
 import ForecastCard from '../components/ForecastCard';
 import Link from 'next/link';
 import Footer from '../components/Footer';
 
-// 型定義
+// ===================================
+// ★ 1. 型定義をコンポーネントの外に移動
+// ===================================
 interface Forecast {
     day: string;
     date: string;
@@ -22,107 +24,136 @@ interface DailyData {
 }
 type TimeOfDay = "morning" | "afternoon" | "evening" | "night";
 
+// ===================================
+// ★ 2. ロジック関数をコンポーネントの外に移動
+// ===================================
+
+const mapWeatherType = (weatherCode: string): string => {
+    const code = weatherCode.toLowerCase();
+    if (code.includes("rain")) return "rainy";
+    if (code.includes("snow")) return "snowy";
+    if (code.includes("clouds")) return "cloudy";
+    return "sunny";
+};
+
+const getWeatherText = (weatherType: string): string => {
+    switch (weatherType) {
+        case 'partlyCloudy': return '晴れ時々くもり';
+        case 'cloudy': return 'くもり';
+        case 'sunny': return '晴れ';
+        case 'rainy': return '雨';
+        case 'snowy': return '雪';
+        case 'night': return '夜';
+        default: return '晴れ';
+    }
+};
+
+const getTimeOfDay = (date: Date): TimeOfDay => {
+    const hour = date.getHours();
+    if (hour >= 5 && hour < 12) return "morning";
+    if (hour >= 12 && hour < 17) return "afternoon";
+    if (hour >= 17 && hour < 19) return "evening";
+    return "night";
+};
+
+// 背景色決定ロジック
+const getBackgroundColorClass = (weatherType: string | undefined): string => {
+    if (!weatherType) return 'bg-sky-200';
+
+    switch (weatherType) {
+        case 'sunny':
+            return 'bg-orange-200';
+        case 'rainy':
+            return 'bg-blue-200';
+        case 'cloudy':
+        case 'partlyCloudy':
+            return 'bg-gray-200';
+        case 'night':
+        case 'snowy':
+        default:
+            return 'bg-sky-200';
+    }
+};
+
+// メッセージ生成ロジック
+const generateAdviceMessage = (data: { day: string; weather: string; high: number; low: number; pop: number }, index: number): string => {
+    const { day, weather, high, low, pop } = data;
+    const weatherText = getWeatherText(weather);
+
+    let messages: string[] = [];
+
+    if (pop >= 50) {
+        messages = [
+            `☔ ${day}は雨が降るみたい！傘を忘れないでね。`,
+            `💧 降水確率は${pop}%だよ。今日はお気に入りのレイングッズを用意しよう！`,
+            `🌧️ ${day}は雨模様...。濡れないように気をつけてね。`,
+        ];
+    } else if (high >= 25) {
+        messages = [
+            `🥵 ${day}は${high}°Cまで上がるよ！半袖のほうがいいかも。`,
+            `☀️ 暑い一日になりそう！水分補給を忘れずにね。`,
+            `💦 ${day}はとっても暑くなるよ。熱中症には気をつけて。`,
+        ];
+    } else if (low <= 5) {
+        messages = [
+            `🥶 ${day}は${low}°Cまで下がるよ...。しっかり防寒してね。`,
+            `❄️ 寒い日が続きそうだね。温かい飲み物を飲んで体を冷やさないように！`,
+            `🌬️ ${day}は冷え込む予報だよ。マフラーや手袋が必要かも。`,
+        ];
+    } else {
+        messages = [
+            `${day}の天気は${weatherText}だよ。最高${high}°C、最低${low}°C。`,
+            `${day}の予報は${weatherText}だね。穏やかな一日になりますように。`,
+            `今日（${day}）の天気予報は、${weatherText}！`,
+        ];
+    }
+
+    const selectedIndex = index % messages.length;
+    return messages[selectedIndex];
+};
+
+
+// ===================================
+// ★ 3. メインコンポーネント本体 (短縮)
+// ===================================
 export default function WeatherPage() {
+    // --- State定義 (短縮) ---
     const [location, setLocation] = useState('位置情報を取得中...');
     const [forecast, setForecast] = useState<Forecast[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [selectedDayMessage, setSelectedDayMessage] = useState<string | null>(null);
+    const [messageIndex, setMessageIndex] = useState(0);
 
-    const mapWeatherType = (weatherCode: string): string => {
-        const code = weatherCode.toLowerCase();
-        if (code.includes("rain")) return "rainy";
-        if (code.includes("snow")) return "snowy";
-        if (code.includes("clouds")) return "cloudy";
-        return "sunny";
-    };
-
-    const getWeatherText = (weatherType: string): string => {
-        switch (weatherType) {
-            case 'partlyCloudy': return '晴れ時々くもり';
-            case 'cloudy': return 'くもり';
-            case 'sunny': return '晴れ';
-            case 'rainy': return '雨';
-            case 'snowy': return '雪';
-            case 'night': return '夜';
-            default: return '晴れ';
-        }
-    };
-
-    // ★ 1. 天気に基づいたアドバイスメッセージを生成する関数 (変更なし)
-    const generateAdviceMessage = (data: { day: string; weather: string; high: number; low: number; pop: number }): string => {
-        const { day, weather, high, low, pop } = data;
-        const weatherText = getWeatherText(weather);
-
-        // 優先度1: 降水確率のチェック (50%以上)
-        if (pop >= 50) {
-            return `☔ ${day}は雨が降るみたい！傘を忘れないでね。`;
-        }
-
-        // 優先度2: 高温のチェック (25℃以上)
-        if (high >= 25) {
-            return `🥵 ${day}は${high}°Cまで上がるよ！半袖のほうがいいかも。`;
-        }
-
-        // 優先度3: 低温のチェック (5℃以下)
-        if (low <= 5) {
-            return `🥶 ${day}は${low}°Cまで下がるよ...。しっかり防寒してね。`;
-        }
-
-        // デフォルト: 天気の詳細
-        return `${day}の天気は${weatherText}だよ。最高${high}°C、最低${low}°C。`;
-    };
-
-    const getTimeOfDay = (date: Date): TimeOfDay => {
-        const hour = date.getHours();
-        if (hour >= 5 && hour < 12) return "morning";
-        if (hour >= 12 && hour < 17) return "afternoon";
-        if (hour >= 17 && hour < 19) return "evening";
-        return "night";
-    };
-
-    // ★ 2. 天気タイプに基づいて背景色クラスを返す新しい関数
-    const getBackgroundColorClass = (weatherType: string | undefined): string => {
-        if (!weatherType) return 'bg-sky-200'; // データがない場合はデフォルト
-
-        switch (weatherType) {
-            case 'sunny':
-                return 'bg-orange-200'; // 晴れの場合はオレンジ系
-            case 'rainy':
-                return 'bg-blue-200'; // 雨の場合は青系
-            case 'cloudy':
-            case 'partlyCloudy':
-                return 'bg-gray-200'; // 曇りの場合はグレー系
-            case 'night':
-            case 'snowy':
-            default:
-                return 'bg-sky-200'; // その他は空色
-        }
-    };
-
-    const handleInitialMessage = (data: Forecast[]) => {
+    // --- メモ化された関数 (ロジックを簡潔に保つ) ---
+    const handleInitialMessage = useCallback((data: Forecast[]) => {
         if (data.length > 0) {
-            // 今日の天気に基づいた初期メッセージを設定
             const todayData = data[0];
-            const initialMessage = generateAdviceMessage(todayData);
+            const initialMessage = generateAdviceMessage(todayData, 0);
             setSelectedDayMessage(initialMessage);
+            setMessageIndex(1);
         }
-    }
+    }, []);
 
-    const handleCardClick = (data: { day: string; weather: string; high: number; low: number; pop: number }) => {
-        const message = generateAdviceMessage(data);
+    const handleCardClick = useCallback((data: { day: string; weather: string; high: number; low: number; pop: number }) => {
+        const message = generateAdviceMessage(data, messageIndex);
         setSelectedDayMessage(message);
-    }
+        setMessageIndex(prevIndex => (prevIndex + 1));
+    }, [messageIndex]);
 
+
+    // --- データ取得ロジック (useEffect内に集約) ---
     useEffect(() => {
         const fetchWeatherData = async (latitude: number, longitude: number) => {
             setError(null);
             try {
+                // APIからのデータ取得
                 const forecastResponse = await fetch(`/api/weather/forecast?lat=${latitude}&lon=${longitude}`);
                 const data = await forecastResponse.json();
                 if (!forecastResponse.ok) throw new Error(data.message || '予報の取得に失敗しました');
                 setLocation(data.city.name || "不明な場所");
 
+                // 週間予報データの整形ロジック
                 const dailyForecasts = new Map<string, DailyData>();
                 data.list.forEach((item: any) => {
                     const date = new Date(item.dt * 1000).toLocaleDateString('ja-JP');
@@ -155,17 +186,18 @@ export default function WeatherPage() {
                     };
                 });
                 setForecast(formattedForecast);
-                handleInitialMessage(formattedForecast); // 初期メッセージを設定
+                handleInitialMessage(formattedForecast);
             } catch (err: any) {
                 console.error("Failed to fetch weather forecast:", err);
                 setError(err.message);
                 setLocation("天気情報の取得に失敗");
-                setSelectedDayMessage("あれれ、うまくお天気を調べられなかったみたい..."); // エラー時のメッセージ
+                setSelectedDayMessage("あれれ、うまくお天気を調べられなかったみたい...");
             } finally {
                 setLoading(false);
             }
         };
 
+        // Geolocationロジック
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => fetchWeatherData(position.coords.latitude, position.coords.longitude),
@@ -173,7 +205,7 @@ export default function WeatherPage() {
                     setLocation("位置情報が取得できませんでした");
                     setError("位置情報の取得を許可してください。");
                     setLoading(false);
-                    setSelectedDayMessage("位置情報の取得を許可してね..."); // 位置情報エラー時のメッセージ
+                    setSelectedDayMessage("位置情報の取得を許可してね...");
                 }
             );
         } else {
@@ -181,15 +213,15 @@ export default function WeatherPage() {
             setLoading(false);
             setSelectedDayMessage("この端末では位置情報機能が利用できません。");
         }
-    }, []);
+    }, [handleInitialMessage]);
 
-    // ★ 3. 今日の天気に基づいて背景色クラスを取得
+
+    // --- UIレンダリング (短縮) ---
     const todayWeather = forecast.length > 0 ? forecast[0].weather : undefined;
     const dynamicBackgroundClass = getBackgroundColorClass(todayWeather);
 
     return (
         <div className="w-full min-h-screen bg-gray-200 flex items-center justify-center p-4">
-            {/* ★ 4. 動的に生成した背景色クラスを適用 */}
             <main className={`w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col text-slate-700 transition-colors duration-500 ${dynamicBackgroundClass}`}>
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-black/80 rounded-b-xl z-10"></div>
 
