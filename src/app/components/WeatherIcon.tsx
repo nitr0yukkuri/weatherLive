@@ -2,8 +2,8 @@
 
 // react-iconsから天気のアイコンをインポート
 import { IoSunny, IoRainy, IoCloudy, IoSnow } from 'react-icons/io5';
-// ★ 1. 月のアイコンを RiMoonFill に変更
-import { RiMoonFill } from "react-icons/ri";
+// ★ 1. 月のアイコンを FaMoon に変更
+import { FaMoon } from 'react-icons/fa';
 
 // 天気タイプとアイコン、色の対応表を作成
 const weatherMap = {
@@ -11,8 +11,8 @@ const weatherMap = {
     rainy: { component: IoRainy, color: '#4682B4' },
     cloudy: { component: IoCloudy, color: '#A0A0A0' },
     snowy: { component: IoSnow, color: '#87CEEB' },
-    // ★ 2. nightのコンポーネントを RiMoonFill に変更
-    night: { component: RiMoonFill, color: '#FFD700' },
+    // ★ 2. nightのコンポーネントを FaMoon に変更
+    night: { component: FaMoon, color: '#FFD700' },
 };
 
 export default function WeatherIcon({ type, size = 80 }: { type: string; size?: number }) {

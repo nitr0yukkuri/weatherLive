@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import CharacterFace from './CharacterFace';
 import WeatherIcon from './WeatherIcon';
 import Footer from './Footer';
-// TiWeatherNightはWeatherIcon内で使われるので、ここでの直接インポートは不要になります
 
 // 型定義
 type WeatherType = "sunny" | "rainy" | "cloudy" | "snowy";
@@ -100,7 +99,6 @@ export default function TenChanHomeClient({ initialData }) {
                     <div className="flex flex-col items-center gap-2">
                         {weather ? (
                             <>
-                                {/* ★★★ ここを WeatherIcon コンポーネントを使うように変更 ★★★ */}
                                 {timeOfDay === 'night' ? (
                                     <WeatherIcon type="night" size={96} />
                                 ) : (
@@ -121,14 +119,15 @@ export default function TenChanHomeClient({ initialData }) {
                 </div>
 
                 <div className="flex-grow flex flex-col items-center justify-center gap-y-4 p-3 text-center pb-20">
-                    <div className="w-64 h-64 rounded-full bg-white/30 p-2 shadow-inner backdrop-blur-sm">
-                        <div className="w-full h-full rounded-full border-[3px] border-white/60 flex items-center justify-center">
+                    {/* ↓↓↓ 顔のサイズを小さくしました ↓↓↓ */}
+                    <div className="w-40 h-40 rounded-full bg-white p-2">
+                        <div className="w-full h-full rounded-full flex items-center justify-center">
                             <CharacterFace mood={getPetMood()} />
                         </div>
                     </div>
 
                     <div>
-                        <h1 className="text-2xl font-bold backdrop-blur-sm bg-white/30 rounded-lg px-4 py-1">{petState.name}</h1>
+                        <h1 className="text-xl font-bold backdrop-blur-sm bg-white/30 rounded-lg px-4 py-1">{petState.name}</h1>
                     </div>
                 </div>
 

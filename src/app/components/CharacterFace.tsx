@@ -18,10 +18,14 @@ export default function CharacterFace({ mood = "happy" }: { mood?: "happy" | "ne
     };
 
     return (
-        <svg viewBox="0 0 120 120" width="80" height="80">
+        <svg viewBox="0 0 120 120" width="100%" height="100%">
+            {/* 顔の白い背景は維持します */}
+            <circle cx="60" cy="60" r="60" fill="white" />
+
+            {/* ↓↓↓ 目、頬、口をすべて元のデザインに戻しました ↓↓↓ */}
             {/* Blush */}
-            <circle cx="20" cy="70" r="12" fill="#F8BBD0" opacity="0.7" />
-            <circle cx="100" cy="70" r="12" fill="#F8BBD0" opacity="0.7" />
+            <circle cx="20" cy="70" r="12" fill="#F8BBD0" />
+            <circle cx="100" cy="70" r="12" fill="#F8BBD0" />
             {/* Eyes */}
             <circle cx="40" cy="55" r="5" fill="#5D4037" />
             <circle cx="80" cy="55" r="5" fill="#5D4037" />
