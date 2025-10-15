@@ -7,7 +7,7 @@ const config = {
     ],
     theme: {
         extend: {
-            // ★ グラデーションで使用する色を追加
+            // 色の定義はそのまま
             colors: {
                 'sunny-from': '#87CEEB',
                 'sunny-to': '#FFD700',
@@ -20,7 +20,14 @@ const config = {
                 'night-from': '#00008B',
                 'night-to': '#483D8B',
             },
-            backgroundImage: {} // ここは空のままでOKです
+            // ★★★ この backgroundImage の部分を丸ごと追加してください ★★★
+            backgroundImage: {
+                'gradient-sunny': "linear-gradient(to top, var(--tw-gradient-stops))",
+                'gradient-cloudy': "linear-gradient(to top, var(--tw-gradient-stops))",
+                'gradient-rainy': "linear-gradient(to top, var(--tw-gradient-stops))",
+                'gradient-snowy': "linear-gradient(to top, var(--tw-gradient-stops))",
+                'gradient-night': "linear-gradient(to top, var(--tw-gradient-stops))",
+            }
         },
     },
     plugins: [],

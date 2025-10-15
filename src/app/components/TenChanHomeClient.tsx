@@ -28,14 +28,22 @@ const conversationMessages = {
     default: ["こんにちは！", "なになに？", "えへへっ", "タップしてくれてありがとう！"]
 };
 
+// ★★★ この関数を書き換えます ★★★
 const getBackgroundGradientClass = (weather: WeatherType | null, timeOfDay: TimeOfDay): string => {
-    if (timeOfDay === 'night') return 'bg-gradient-to-t from-night-from to-night-to';
+    if (timeOfDay === 'night') {
+        return 'bg-gradient-night from-night-from to-night-to';
+    }
     switch (weather) {
-        case 'sunny': return 'bg-gradient-to-t from-sunny-from to-sunny-to';
-        case 'cloudy': return 'bg-gradient-to-t from-cloudy-from to-cloudy-to';
-        case 'rainy': return 'bg-gradient-to-t from-rainy-from to-rainy-to';
-        case 'snowy': return 'bg-gradient-to-t from-snowy-from to-snowy-to';
-        default: return 'bg-sky-200';
+        case 'sunny':
+            return 'bg-gradient-sunny from-sunny-from to-sunny-to';
+        case 'cloudy':
+            return 'bg-gradient-cloudy from-cloudy-from to-cloudy-to';
+        case 'rainy':
+            return 'bg-gradient-rainy from-rainy-from to-rainy-to';
+        case 'snowy':
+            return 'bg-gradient-snowy from-snowy-from to-snowy-to';
+        default:
+            return 'bg-sky-200';
     }
 };
 
