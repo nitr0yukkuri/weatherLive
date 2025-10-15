@@ -17,7 +17,9 @@ export async function GET(request: Request) {
     const forecastApiUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=ja`;
 
     try {
-        const response = await fetch(forecastApiUrl);
+        // ★★★ この行を変更しました！ ★★★
+        // 10分間（600秒）キャッシュするように設定を追加
+        const response = await fetch(forecastApiUrl, { next: { revalidate: 600 } });
 
         // レスポンスがOKでない場合、エラー内容を詳しく調査する
         if (!response.ok) {

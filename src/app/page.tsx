@@ -12,7 +12,10 @@ async function getInitialWeatherData(lat: string, lon: string) {
     const forecastApiUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=ja`;
 
     try {
-        const response = await fetch(forecastApiUrl, { next: { revalidate: 600 } });
+        // ★★★ 変更したのはこの一行です！ ★★★
+        const response = await fetch(forecastApiUrl);
+        // ★★★★★★★★★★★★★★★★★★★★
+
         if (!response.ok) return null;
         const data = await response.json();
         const currentWeather = data.list[0];
@@ -36,9 +39,7 @@ async function getInitialWeatherData(lat: string, lon: string) {
 
 // page.tsxはサーバーコンポーネント
 export default async function TenChanHomePage() {
-    // ★★★★★ ここに await を追加 ★★★★★
-    const headersList = await headers();
-    // ★★★★★★★★★★★★★★★★★★★★★★★
+    const headersList = headers();
 
     // Vercel環境でIPから緯度経度を取得 (ローカルでは大阪にフォールバック)
     const lat = headersList.get('x-vercel-ip-latitude') || '34.6864';
