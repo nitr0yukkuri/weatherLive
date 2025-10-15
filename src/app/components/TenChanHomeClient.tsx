@@ -16,10 +16,40 @@ interface PetState {
     lastFed: number;
 }
 
-const conversationMessages = [
-    "こんにちは！", "いい天気だね！", "お腹すいたな...", "なになに？",
-    "えへへっ", "今日も一日がんばろうね！", "タップしてくれてありがとう！"
-];
+// ★ 1. 天気ごとにセリフを分類
+const conversationMessages = {
+    sunny: [
+        "おひさまが気持ちいいね！",
+        "こんな日はおさんぽしたくなるな〜",
+        "ぽかぽかするね！",
+    ],
+    cloudy: [
+        "今日は過ごしやすいね！",
+        "くもり空も、落ち着いてて好きだよ。",
+        "雲の形をずっと見ていられるなあ…",
+    ],
+    rainy: [
+        "雨の音が聞こえるね",
+        "傘は持った？",
+        "雨の日も、なんだか特別な感じがする！",
+    ],
+    snowy: [
+        "わー！雪だ！",
+        "雪だるま、作れるかな？",
+        "外は寒いから、暖かくしててね！",
+    ],
+    night: [
+        "今日もおつかれさま",
+        "星が見えるかな？",
+        "そろそろ眠くなってきたかも...",
+    ],
+    default: [
+        "こんにちは！",
+        "なになに？",
+        "えへへっ",
+        "タップしてくれてありがとう！"
+    ]
+};
 
 export default function TenChanHomeClient({ initialData }) {
     const [weather, setWeather] = useState<WeatherType | null>(initialData?.weather || null);
@@ -32,12 +62,26 @@ export default function TenChanHomeClient({ initialData }) {
     const [isClient, setIsClient] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
 
+    // ★ 2. クリックされた時のロジックを修正
     const handleCharacterClick = () => {
-        const randomMessage = conversationMessages[Math.floor(Math.random() * conversationMessages.length)];
+        const currentHour = new Date().getHours();
+        const isNight = currentHour < 5 || currentHour >= 19;
+
+        let messageOptions = conversationMessages.default;
+
+        if (isNight) {
+            messageOptions = conversationMessages.night;
+        } else if (weather && conversationMessages[weather]) {
+            messageOptions = conversationMessages[weather];
+        }
+
+        const randomMessage = messageOptions[Math.floor(Math.random() * messageOptions.length)];
         setMessage(randomMessage);
-        setTimeout(() => { setMessage(null); }, 3000);
+
+        setTimeout(() => { setMessage(null); }, 4000);
     };
 
+    // ( ... 以下、関数の定義やuseEffectは変更なし ... )
     const getTimeOfDay = (date: Date): TimeOfDay => {
         const hour = date.getHours();
         if (hour >= 5 && hour < 12) return "morning";
