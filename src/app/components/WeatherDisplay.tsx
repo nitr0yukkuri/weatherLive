@@ -1,6 +1,5 @@
 'use client';
 
-// ★ 1. motion と AnimatePresence をインポート
 import { motion, AnimatePresence } from 'framer-motion';
 import WeatherIcon from './WeatherIcon';
 
@@ -23,29 +22,24 @@ export default function WeatherDisplay({
     location,
     onCycleWeather,
 }: WeatherDisplayProps) {
+    // ★★★ 表示する天気を決定するロジックを修正 ★★★
+    const displayWeather = (timeOfDay === 'night' && (weather === 'sunny' || weather === null)) ? 'night' : weather;
+
     return (
         <div className="pt-8 text-center h-[150px] flex flex-col justify-center">
             <div className="flex flex-col items-center gap-2 cursor-pointer" onClick={onCycleWeather}>
-
-                {/* ★ 2. AnimatePresenceでアニメーションの範囲を指定 */}
                 <AnimatePresence mode="wait">
-                    {/* ★ 3. motion.divでアニメーションさせる要素を囲む */}
                     <motion.div
-                        // ★ 4. 天気が変わるたびにアニメーションを実行するためのキー
-                        key={weather || timeOfDay}
+                        key={displayWeather || timeOfDay}
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 20 }}
                         transition={{ duration: 0.4 }}
-                        className="flex flex-col items-center gap-2" // 中身を中央揃えにするためのクラス
+                        className="flex flex-col items-center gap-2"
                     >
-                        {weather ? (
+                        {displayWeather ? (
                             <>
-                                {timeOfDay === 'night' ? (
-                                    <WeatherIcon type="night" size={96} />
-                                ) : (
-                                    <WeatherIcon type={weather} size={96} />
-                                )}
+                                <WeatherIcon type={displayWeather} size={96} />
                                 <div className="flex items-center justify-center gap-2 text-sm text-[#5D4037]/80 bg-white/30 backdrop-blur-sm rounded-md px-2 py-1">
                                     {isClient && <span>{currentTime.getHours().toString().padStart(2, '0')}:{currentTime.getMinutes().toString().padStart(2, '0')}</span>}
                                     {temperature !== null && <span>・{temperature}°C</span>}
@@ -59,7 +53,6 @@ export default function WeatherDisplay({
                         )}
                     </motion.div>
                 </AnimatePresence>
-
             </div>
         </div>
     );

@@ -1,6 +1,6 @@
 'use client';
 
-// framer-motionのインポートを削除
+import { motion } from 'framer-motion';
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Footer from './Footer';
@@ -28,10 +28,14 @@ const conversationMessages = {
     default: ["こんにちは！", "なになに？", "えへへっ", "タップしてくれてありがとう！"]
 };
 
+// ★★★ ここのロジックを修正します ★★★
 const getBackgroundGradientClass = (weather: WeatherType | null, timeOfDay: TimeOfDay): string => {
-    if (timeOfDay === 'night') {
+    // 夜、かつ、天気が晴れ（または未設定）の場合のみ夜の背景にする
+    if (timeOfDay === 'night' && (weather === 'sunny' || weather === null)) {
         return 'bg-night';
     }
+
+    // それ以外の天気の場合は、天気を優先する
     switch (weather) {
         case 'cloudy':
             return 'bg-cloudy';
@@ -151,8 +155,13 @@ export default function TenChanHomeClient({ initialData }) {
 
     return (
         <div className="w-full min-h-screen bg-gray-200 flex items-center justify-center p-4">
-            {/* ★★★ mainタグに直接背景クラスを適用 ★★★ */}
-            <main className={`w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col text-[#5D4037] ${dynamicBackgroundClass}`}>
+            <motion.main
+                key={dynamicBackgroundClass}
+                className={`w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col text-[#5D4037] ${dynamicBackgroundClass}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1.5, ease: 'easeInOut' }}
+            >
                 <ConfirmationModal
                     isOpen={isModalOpen}
                     onClose={() => setIsModalOpen(false)}
@@ -162,8 +171,6 @@ export default function TenChanHomeClient({ initialData }) {
                         おさんぽは1日<br />3回しかできません<br />大丈夫ですか？
                     </p>
                 </ConfirmationModal>
-
-                {/* ★★★ 背景用のdivは完全に削除 ★★★ */}
 
                 <div className="relative z-10 flex flex-col flex-grow">
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-black/80 rounded-b-xl"></div>
@@ -184,7 +191,7 @@ export default function TenChanHomeClient({ initialData }) {
                     />
                     <Footer onWalkClick={() => setIsModalOpen(true)} />
                 </div>
-            </main>
+            </motion.main>
         </div>
     );
 }
