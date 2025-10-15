@@ -35,7 +35,7 @@ export default function CharacterDisplay({ petName, mood, message, onCharacterCl
             </div>
 
             <div>
-                <h1 className="text-4xl font-bold backdrop-blur-sm bg-white/30 rounded-lg px-4 py-1">{petName}</h1>
+                <h1 className="text-4xl font-bold backdrop-blur-sm bg-white/30 rounded-lg px-4 py-1 bg-red-500">{petName}</h1>
             </div>
         </div>
     );

@@ -12,9 +12,8 @@ async function getInitialWeatherData(lat: string, lon: string) {
     const forecastApiUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=ja`;
 
     try {
-        // ★★★ 変更したのはこの一行です！ ★★★
-        const response = await fetch(forecastApiUrl);
-        // ★★★★★★★★★★★★★★★★★★★★
+        // ★★★ 変更点: キャッシュを無効化し、常に最新の天気データを取得します ★★★
+        const response = await fetch(forecastApiUrl, { cache: 'no-store' });
 
         if (!response.ok) return null;
         const data = await response.json();

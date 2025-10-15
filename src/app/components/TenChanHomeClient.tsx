@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
+// framer-motionのインポートを削除
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Footer from './Footer';
@@ -28,22 +28,20 @@ const conversationMessages = {
     default: ["こんにちは！", "なになに？", "えへへっ", "タップしてくれてありがとう！"]
 };
 
-// ★★★ この関数を書き換えます ★★★
 const getBackgroundGradientClass = (weather: WeatherType | null, timeOfDay: TimeOfDay): string => {
     if (timeOfDay === 'night') {
-        return 'bg-gradient-night from-night-from to-night-to';
+        return 'bg-night';
     }
     switch (weather) {
-        case 'sunny':
-            return 'bg-gradient-sunny from-sunny-from to-sunny-to';
         case 'cloudy':
-            return 'bg-gradient-cloudy from-cloudy-from to-cloudy-to';
+            return 'bg-cloudy';
         case 'rainy':
-            return 'bg-gradient-rainy from-rainy-from to-rainy-to';
+            return 'bg-rainy';
         case 'snowy':
-            return 'bg-gradient-snowy from-snowy-from to-snowy-to';
+            return 'bg-snowy';
+        case 'sunny':
         default:
-            return 'bg-sky-200';
+            return 'bg-sunny';
     }
 };
 
@@ -153,7 +151,8 @@ export default function TenChanHomeClient({ initialData }) {
 
     return (
         <div className="w-full min-h-screen bg-gray-200 flex items-center justify-center p-4">
-            <main className={`w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col text-[#5D4037] bg-transparent`}>
+            {/* ★★★ mainタグに直接背景クラスを適用 ★★★ */}
+            <main className={`w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col text-[#5D4037] ${dynamicBackgroundClass}`}>
                 <ConfirmationModal
                     isOpen={isModalOpen}
                     onClose={() => setIsModalOpen(false)}
@@ -164,14 +163,25 @@ export default function TenChanHomeClient({ initialData }) {
                     </p>
                 </ConfirmationModal>
 
-                <AnimatePresence>
-                    <motion.div key={dynamicBackgroundClass} className={`absolute inset-0 -z-10 ${dynamicBackgroundClass}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 1.5, ease: 'easeInOut' }} />
-                </AnimatePresence>
+                {/* ★★★ 背景用のdivは完全に削除 ★★★ */}
 
                 <div className="relative z-10 flex flex-col flex-grow">
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-black/80 rounded-b-xl"></div>
-                    <WeatherDisplay weather={weather} timeOfDay={timeOfDay} isClient={isClient} currentTime={currentTime} temperature={temperature} location={location} onCycleWeather={cycleWeather} />
-                    <CharacterDisplay petName={petState.name} mood={getPetMood()} message={message} onCharacterClick={handleCharacterClick} />
+                    <WeatherDisplay
+                        weather={weather}
+                        timeOfDay={timeOfDay}
+                        isClient={isClient}
+                        currentTime={currentTime}
+                        temperature={temperature}
+                        location={location}
+                        onCycleWeather={cycleWeather}
+                    />
+                    <CharacterDisplay
+                        petName={petState.name}
+                        mood={getPetMood()}
+                        message={message}
+                        onCharacterClick={handleCharacterClick}
+                    />
                     <Footer onWalkClick={() => setIsModalOpen(true)} />
                 </div>
             </main>

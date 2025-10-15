@@ -7,6 +7,7 @@ import "./globals.css";
 const rounded_mplus = M_PLUS_Rounded_1c({
     subsets: ["latin"],
     weight: ["400", "500", "800"], // 必要な太さを指定
+    display: 'swap', // ビルドエラーを防ぐための設定
 });
 
 export const metadata: Metadata = {
@@ -22,7 +23,12 @@ export default function RootLayout({
     return (
         <html lang="ja">
             {/* bodyタグにフォントのクラスを適用 */}
-            <body className={rounded_mplus.className}>{children}</body>
+            <body className={rounded_mplus.className}>
+                {/* Tailwind CSSにクラスを認識させるためのおまじない */}
+                <div className="hidden bg-sunny bg-cloudy bg-rainy bg-snowy bg-night"></div>
+
+                {children}
+            </body>
         </html>
     );
 }
