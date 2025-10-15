@@ -2,20 +2,17 @@
 
 import { useState } from 'react';
 import NavItem from './NavItem';
-// BsCollectionFillを再インポート
 import { BsCloud, BsCollectionFill } from 'react-icons/bs';
 import { MdDirectionsWalk } from 'react-icons/md';
 import { IoSettingsSharp } from 'react-icons/io5';
-import { FaSeedling } from 'react-icons/fa'; // 実績のアイコンはそのままFaSeedlingを使います
+import { FaSeedling } from 'react-icons/fa';
 
-export default function Footer() {
+export default function Footer({ onWalkClick }: { onWalkClick?: () => void }) {
     const [activePage, setActivePage] = useState('コレクション');
 
     const navItems = [
         { name: '天気予報', href: '/weather', icon: <BsCloud size={28} /> },
-        // ★ リンク先を '/walk' に修正
-        { name: 'おさんぽ', href: '/walk', icon: <MdDirectionsWalk size={28} /> },
-        // hasNotificationを削除
+        { name: 'おさんぽ', href: undefined, icon: <MdDirectionsWalk size={28} />, onClick: onWalkClick },
         { name: 'コレクション', href: '#', icon: <BsCollectionFill size={28} /> },
         { name: '実績', href: '#', icon: <FaSeedling size={28} /> },
         { name: '設定', href: '#', icon: <IoSettingsSharp size={28} /> },
@@ -31,8 +28,7 @@ export default function Footer() {
                         icon={item.icon}
                         label={item.name}
                         isActive={activePage === item.name}
-                        onClick={() => setActivePage(item.name)}
-                    // ★ hasNotificationの渡しを削除 (エラー対応)
+                        onClick={item.onClick ? item.onClick : () => setActivePage(item.name)}
                     />
                 ))}
             </nav>

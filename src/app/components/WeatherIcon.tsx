@@ -26,7 +26,7 @@ export default function WeatherIcon({ type, size = 80 }: { type: string; size?: 
     const IconComponent = iconInfo.component;
 
     return (
-        <div className="inline-block">
+        <div className="inline-block  drop-shadow-lg">
             <IconComponent
                 size={size}
                 color={iconInfo.color}

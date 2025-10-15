@@ -7,11 +7,20 @@ const config = {
     ],
     theme: {
         extend: {
-            backgroundImage: {
-                // 'bg-main-bg'というクラス名で画像を指定できるようにする
-                // 画像のパスは public/img/background.jpg を想定しています
-                'main-bg': "url('/img/background.jpg')",
-            }
+            // ★ グラデーションで使用する色を追加
+            colors: {
+                'sunny-from': '#87CEEB',
+                'sunny-to': '#FFD700',
+                'cloudy-from': '#B0C4DE',
+                'cloudy-to': '#778899',
+                'rainy-from': '#4682B4',
+                'rainy-to': '#708090',
+                'snowy-from': '#E0FFFF',
+                'snowy-to': '#B0E0E6',
+                'night-from': '#00008B',
+                'night-to': '#483D8B',
+            },
+            backgroundImage: {} // ここは空のままでOKです
         },
     },
     plugins: [],
