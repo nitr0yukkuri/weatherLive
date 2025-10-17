@@ -155,12 +155,8 @@ export default function TenChanHomeClient({ initialData }) {
 
     return (
         <div className="w-full min-h-screen bg-gray-200 flex items-center justify-center p-4">
-            <motion.main
-                key={dynamicBackgroundClass}
+            <main
                 className={`w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col text-[#5D4037] ${dynamicBackgroundClass}`}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 1.5, ease: 'easeInOut' }}
             >
                 <ConfirmationModal
                     isOpen={isModalOpen}
@@ -191,7 +187,7 @@ export default function TenChanHomeClient({ initialData }) {
                     />
                     <Footer onWalkClick={() => setIsModalOpen(true)} />
                 </div>
-            </motion.main>
+            </main>
         </div>
     );
 }
