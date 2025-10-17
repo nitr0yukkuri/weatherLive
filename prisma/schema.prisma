@@ -1,0 +1,32 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // ↓↓↓ ここの行を変更しました！ ↓↓↓
+  url      = env("DATABASE_URL_UNPOOLED") 
+}
+
+// アイテムのマスターデータを管理
+model Item {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique // アイテム名 (例: あじさい)
+  description String   // アイテムの説明
+  imageUrl    String?  // 画像URL (任意)
+  rarity      String   @default("normal") // レア度 (normal, rareなど)
+}
+
+// 将来的にユーザーごとのアイテムを管理するためのモデル（参考）
+// model UserInventory {
+//   id         Int      @id @default(autoincrement())
+//   userId     String   // ユーザーID
+//   itemId     Int      // アイテムID
+//   obtainedAt DateTime @default(now()) // 獲得日時
+// }
