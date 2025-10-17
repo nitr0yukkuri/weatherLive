@@ -3,12 +3,14 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-// ★ 修正後の正しい相対パス: src/app/walk から見て 1つ上に戻る
+import { useRouter } from 'next/navigation'; // ★ useRouterをインポート
 import CharacterFace from '../components/CharacterFace';
 import WeatherIcon from '../components/WeatherIcon';
 import Link from 'next/link';
 import Footer from '../components/Footer';
+import ItemGetModal from '../components/ItemGetModal'; // ★ 作成したモーダルをインポート
 
+// (型定義やヘルパー関数は変更なし)
 // ===================================
 // 型定義 (WeatherPage.tsxから流用)
 // ===================================
@@ -71,28 +73,27 @@ const getWalkMessage = (weatherType: string | undefined): string => {
     }
 }
 
+
 // ===================================
 // メインコンポーネント
 // ===================================
 
 export default function WalkPage() {
+    const router = useRouter(); // ★ routerインスタンスを取得
     const [weather, setWeather] = useState<string | null>(null);
     const [location, setLocation] = useState('位置情報を取得中...');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    // ★ アイテム獲得モーダルのためのStateを追加
+    const [obtainedItem, setObtainedItem] = useState<string | null>(null);
+    const [isItemModalOpen, setIsItemModalOpen] = useState(false);
+
+
     const mood = useMemo(() => (error ? 'sad' : 'happy'), [error]);
     const dynamicBackgroundClass = useMemo(() => getBackgroundColorClass(weather || undefined), [weather]);
 
-    const getTimeOfDay = (date: Date): TimeOfDay => {
-        const hour = date.getHours();
-        if (hour >= 5 && hour < 12) return "morning";
-        if (hour >= 12 && hour < 17) return "afternoon";
-        if (hour >= 17 && hour < 19) return "evening";
-        return "night";
-    };
-
-    // 天気データ取得ロジック
+    // ★ 天気データ取得後にアイテム獲得をシミュレート
     useEffect(() => {
         const fetchCurrentWeather = async (latitude: number, longitude: number) => {
             setError(null);
@@ -121,6 +122,13 @@ export default function WalkPage() {
                 setLocation("天気情報の取得に失敗");
             } finally {
                 setLoading(false);
+                // ★ ここから追加：おさんぽ完了とアイテム獲得をシミュレート
+                setTimeout(() => {
+                    // ここで天候に応じたアイテム取得ロジックなどを実装できます
+                    // 今回は「あじさい」で固定
+                    setObtainedItem('あじさい');
+                    setIsItemModalOpen(true);
+                }, 3000); // 3秒後におさんぽが終わる想定
             }
         };
 
@@ -139,9 +147,21 @@ export default function WalkPage() {
         }
     }, []);
 
+    // ★ OKボタンが押された時の処理
+    const handleModalClose = () => {
+        setIsItemModalOpen(false);
+        router.push('/'); // ホーム画面に戻る
+    };
 
     return (
         <div className="w-full min-h-screen bg-gray-200 flex items-center justify-center p-4">
+            {/* ★ 作成したモーダルをレンダリング */}
+            <ItemGetModal
+                isOpen={isItemModalOpen}
+                onClose={handleModalClose}
+                itemName={obtainedItem}
+            />
+
             <main className={`w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col text-slate-700 transition-colors duration-500 ${dynamicBackgroundClass}`}>
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-black/80 rounded-b-xl z-10"></div>
 
