@@ -8,11 +8,12 @@ module.exports = {
     theme: {
         extend: {
             backgroundImage: {
-                'sunny': 'linear-gradient(to top, #FFD700, #87CEEB)',
-                'cloudy': 'linear-gradient(to top, #778899, #B0C4DE)',
-                'rainy': 'linear-gradient(to top, #708090, #4682B4)',
-                'snowy': 'linear-gradient(to top, #B0E0E6, #E0FFFF)',
-                'night': 'linear-gradient(to top, #483D8B, #00008B)',
+                'sunny': 'linear-gradient(to top, #fde68a, #a7ddf4)',
+                'cloudy': 'linear-gradient(to top, #9ca3af, #e5e7eb)',
+                'rainy': 'linear-gradient(to top, #60a5fa, #bfdbfe)',
+                // メリハリをつけた水色のグラデーションに変更
+                'snowy': 'linear-gradient(to top, #a7d8e8, #e0f2fe)',
+                'night': 'linear-gradient(to top, #6b7280, #4b5563)',
             },
         },
     },
