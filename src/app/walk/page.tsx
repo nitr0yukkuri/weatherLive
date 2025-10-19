@@ -12,8 +12,14 @@ import ItemGetModal from '../components/ItemGetModal';
 
 // 型定義
 type TimeOfDay = "morning" | "afternoon" | "evening" | "night";
+// ★ 1. 取得するアイテムの型を定義します
+type ObtainedItem = {
+    name: string | null;
+    iconName: string | null;
+};
 
-// ヘルパー関数
+
+// ヘルパー関数 (変更なし)
 const mapWeatherType = (weatherCode: string): string => {
     const code = weatherCode.toLowerCase();
     if (code.includes("rain")) return "rainy";
@@ -52,7 +58,8 @@ export default function WalkPage() {
     const [location, setLocation] = useState('位置情報を取得中...');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [obtainedItem, setObtainedItem] = useState<string | null>(null);
+    // ★ 2. stateを更新して、名前とアイコン名の両方を保持できるようにします
+    const [obtainedItem, setObtainedItem] = useState<ObtainedItem>({ name: null, iconName: null });
     const [isItemModalOpen, setIsItemModalOpen] = useState(false);
 
     const mood = useMemo(() => (error ? 'sad' : 'happy'), [error]);
@@ -80,7 +87,7 @@ export default function WalkPage() {
                 setLocation("天気情報の取得に失敗");
             } finally {
                 setLoading(false);
-                // ★★★ ここがおさんぽ完了後にアイテムを獲得する処理です ★★★
+                // ★ 3. アイテム獲得処理を更新
                 setTimeout(async () => {
                     try {
                         const response = await fetch('/api/items/obtain', { method: 'POST' });
@@ -88,11 +95,16 @@ export default function WalkPage() {
                         if (!response.ok) {
                             throw new Error('アイテムの獲得処理に失敗しました');
                         }
-                        setObtainedItem(obtainedItemData.name);
+                        // ★ APIから返ってきた名前とアイコン名をstateに保存
+                        setObtainedItem({
+                            name: obtainedItemData.name,
+                            iconName: obtainedItemData.iconName
+                        });
                         setIsItemModalOpen(true);
                     } catch (err) {
                         console.error("Failed to get item from API:", err);
-                        setObtainedItem('ふしぎな石');
+                        // ★ エラー時のフォールバックも更新
+                        setObtainedItem({ name: 'ふしぎな石', iconName: 'IoHelpCircle' });
                         setIsItemModalOpen(true);
                     }
                 }, 3000); // 3秒後
@@ -121,10 +133,12 @@ export default function WalkPage() {
 
     return (
         <div className="w-full min-h-screen bg-gray-200 flex items-center justify-center p-4">
+            {/* ★ 4. ItemGetModalにiconNameを渡す */}
             <ItemGetModal
                 isOpen={isItemModalOpen}
                 onClose={handleModalClose}
-                itemName={obtainedItem}
+                itemName={obtainedItem.name}
+                iconName={obtainedItem.iconName}
             />
             <main className={`w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col text-slate-700 transition-colors duration-500 ${dynamicBackgroundClass}`}>
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-black/80 rounded-b-xl z-10"></div>

@@ -21,6 +21,7 @@ model Item {
   description String   // アイテムの説明
   imageUrl    String?  // 画像URL (任意)
   rarity      String   @default("normal") // レア度 (normal, rareなど)
+  iconName    String? // ← この行を追加します
 }
 
 // 将来的にユーザーごとのアイテムを管理するためのモデル（参考）

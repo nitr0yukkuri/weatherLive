@@ -1,16 +1,20 @@
+// src/app/components/ItemGetModal.tsx
+
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-// ★ インポート先を 'react-icons/io5' に変更し、'IoFlower' をインポート
-import { IoFlower } from 'react-icons/io5';
+// ★ 1. ItemIconコンポーネントをインポートします
+import ItemIcon from './ItemIcon';
 
 type Props = {
     isOpen: boolean;
     onClose: () => void;
     itemName: string | null;
+    // ★ 2. iconNameを受け取れるようにPropsを追加します
+    iconName: string | null;
 };
 
-export default function ItemGetModal({ isOpen, onClose, itemName }: Props) {
+export default function ItemGetModal({ isOpen, onClose, itemName, iconName }: Props) {
     if (!itemName) return null;
 
     return (
@@ -21,6 +25,7 @@ export default function ItemGetModal({ isOpen, onClose, itemName }: Props) {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50"
+                    onClick={onClose}
                 >
                     <motion.div
                         initial={{ scale: 0.9, opacity: 0 }}
@@ -30,10 +35,9 @@ export default function ItemGetModal({ isOpen, onClose, itemName }: Props) {
                         className="bg-white rounded-2xl p-8 w-full max-w-xs text-center shadow-xl flex flex-col items-center gap-y-6"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        {/* アイコン */}
+                        {/* ★ 3. 固定のアイコンだった部分を、ItemIconコンポーネントに置き換えます */}
                         <div className="text-purple-500">
-                            {/* ★ アイコンコンポーネントを IoFlower に変更 */}
-                            <IoFlower size={60} />
+                            <ItemIcon name={iconName} size={60} />
                         </div>
 
                         {/* メッセージ */}
