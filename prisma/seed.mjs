@@ -5,13 +5,13 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 const initialItems = [
-    { name: 'ひまわりのタネ', description: '太陽が好きな花のタネ。晴れた日に見つかる。', rarity: 'normal' },
-    { name: 'てるてるぼうず', description: '次の日が晴れるようにお願いするお人形。', rarity: 'rare' },
-    { name: 'あじさい', description: '雨の日にきれいに咲く花。', rarity: 'normal' },
-    { name: 'かたつむりのカラ', description: '雨が好きな生き物のお家。', rarity: 'rare' },
-    { name: 'わたぐも', description: '空にうかぶ雲のかけら。くもりの日に手に入る。', rarity: 'normal' },
-    { name: '雪の結晶', description: 'キラキラと輝く、冬のたからもの。', rarity: 'normal' },
-    { name: 'ほしのかけら', description: '夜空から落ちてきた、小さな光。', rarity: 'rare' },
+    { name: 'ひまわりのタネ', description: '太陽が好きな花のタネ。晴れた日に見つかる。', rarity: 'normal', iconName: 'IoSunny' },
+    { name: 'てるてるぼうず', description: '次の日が晴れるようにお願いするお人形。', rarity: 'rare', iconName: 'BsCloudSunFill' },
+    { name: 'あじさい', description: '雨の日にきれいに咲く花。', rarity: 'normal', iconName: 'IoRainy' },
+    { name: 'かたつむりのカラ', description: '雨が好きな生き物のお家。', rarity: 'rare', iconName: 'FaSnail' },
+    { name: 'わたぐも', description: '空にうかぶ雲のかけら。くもりの日に手に入る。', rarity: 'normal', iconName: 'IoCloudy' },
+    { name: '雪の結晶', description: 'キラキラと輝く、冬のたからもの。', rarity: 'normal', iconName: 'IoSnow' },
+    { name: 'ほしのかけら', description: '夜空から落ちてきた、小さな光。', rarity: 'rare', iconName: 'FaStar' },
 ];
 
 async function main() {
