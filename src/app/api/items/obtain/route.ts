@@ -1,29 +1,25 @@
 // src/app/api/items/obtain/route.ts
 
 import { NextResponse } from 'next/server';
-// ↓↓↓ ここでPrismaを直接インポートします ↓↓↓
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+// lib/prisma.tsからPrismaClientのインスタンスをインポートします
+import prisma from '../../../lib/prisma';
 
 export async function POST(request: Request) {
     try {
+        // ここでは一旦、簡単にするために 'あじさい' を取得するロジックのままにします
         const itemName = 'あじさい';
 
-        let item = await prisma.item.findUnique({
+        const item = await prisma.item.findUnique({
             where: { name: itemName },
         });
 
+        // もしアイテムが見つからなかった場合の処理
         if (!item) {
-            item = await prisma.item.create({
-                data: {
-                    name: itemName,
-                    description: '雨の日に咲く、きれいな花。',
-                    rarity: 'normal',
-                },
-            });
+            return NextResponse.json({ message: '指定されたアイテムが見つかりません。' }, { status: 404 });
         }
 
+        // ★★★ 変更点 ★★★
+        // 取得したitemオブジェクト（これにはnameとiconNameの両方が含まれます）をそのまま返す
         return NextResponse.json(item);
 
     } catch (error) {

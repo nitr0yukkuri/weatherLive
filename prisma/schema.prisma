@@ -8,12 +8,12 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// prisma/schema.prisma
+
 datasource db {
   provider = "postgresql"
-  // ↓↓↓ ここの行を変更しました！ ↓↓↓
-  url      = env("DATABASE_URL_UNPOOLED") 
+  url      = env("DATABASE_URL") 
 }
-
 // アイテムのマスターデータを管理
 model Item {
   id          Int      @id @default(autoincrement())
