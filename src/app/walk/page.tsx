@@ -3,7 +3,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation'; // ★ useSearchParams をインポート
 import CharacterFace from '../components/CharacterFace';
 import WeatherIcon from '../components/WeatherIcon';
 import Link from 'next/link';
@@ -11,14 +11,12 @@ import Footer from '../components/Footer';
 import ItemGetModal from '../components/ItemGetModal';
 
 // 型定義
-type TimeOfDay = "morning" | "afternoon" | "evening" | "night";
 type ObtainedItem = {
     name: string | null;
     iconName: string | null;
 };
 
-
-// ヘルパー関数 (変更なし)
+// ヘルパー関数
 const mapWeatherType = (weatherCode: string): string => {
     const code = weatherCode.toLowerCase();
     if (code.includes("rain")) return "rainy";
@@ -53,6 +51,7 @@ const getWalkMessage = (weatherType: string | undefined): string => {
 // メインコンポーネント
 export default function WalkPage() {
     const router = useRouter();
+    const searchParams = useSearchParams(); // ★ URLのクエリパラメータを取得
     const [weather, setWeather] = useState<string | null>(null);
     const [location, setLocation] = useState('位置情報を取得中...');
     const [loading, setLoading] = useState(true);
@@ -64,6 +63,43 @@ export default function WalkPage() {
     const dynamicBackgroundClass = useMemo(() => getBackgroundColorClass(weather || undefined), [weather]);
 
     useEffect(() => {
+        // ★★★ 変更点 ★★★
+        const debugWeather = searchParams.get('weather');
+
+        const obtainItem = (currentWeather: string) => {
+            setTimeout(async () => {
+                try {
+                    const response = await fetch('/api/items/obtain', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ weather: currentWeather }),
+                    });
+                    const obtainedItemData = await response.json();
+                    if (!response.ok) throw new Error('アイテムの獲得処理に失敗しました');
+
+                    setObtainedItem({
+                        name: obtainedItemData.name,
+                        iconName: obtainedItemData.iconName
+                    });
+                    setIsItemModalOpen(true);
+                } catch (err) {
+                    console.error("Failed to get item from API:", err);
+                    setObtainedItem({ name: 'ふしぎな石', iconName: 'IoHelpCircle' });
+                    setIsItemModalOpen(true);
+                }
+            }, 3000); // 3秒後
+        };
+
+        // デバッグ用の天気がURLにあれば、それを使用
+        if (debugWeather) {
+            setWeather(debugWeather);
+            setLocation("デバッグ中");
+            setLoading(false);
+            obtainItem(debugWeather);
+            return; // これ以降の処理をスキップ
+        }
+
+        // 通常の天気取得処理
         const fetchCurrentWeather = async (latitude: number, longitude: number) => {
             setError(null);
             try {
@@ -80,33 +116,7 @@ export default function WalkPage() {
                 const isNight = hour < 5 || hour >= 19;
                 const currentRealWeather = (isNight && mappedWeather === 'sunny') ? 'night' : mappedWeather;
                 setWeather(currentRealWeather);
-
-                // 天気情報取得後にアイテム獲得処理
-                setTimeout(async () => {
-                    try {
-                        const response = await fetch('/api/items/obtain', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({ weather: currentRealWeather }),
-                        });
-                        const obtainedItemData = await response.json();
-                        if (!response.ok) {
-                            throw new Error('アイテムの獲得処理に失敗しました');
-                        }
-                        setObtainedItem({
-                            name: obtainedItemData.name,
-                            iconName: obtainedItemData.iconName
-                        });
-                        setIsItemModalOpen(true);
-                    } catch (err) {
-                        console.error("Failed to get item from API:", err);
-                        setObtainedItem({ name: 'ふしぎな石', iconName: 'IoHelpCircle' });
-                        setIsItemModalOpen(true);
-                    }
-                }, 3000); // 3秒後
-
+                obtainItem(currentRealWeather); // 天気取得後にアイテム取得
             } catch (err: any) {
                 console.error("Failed to fetch weather on client:", err);
                 setError(err.message);
@@ -129,7 +139,7 @@ export default function WalkPage() {
             setLocation("位置情報機能が利用できません");
             setLoading(false);
         }
-    }, []);
+    }, [searchParams]);
 
     const handleModalClose = () => {
         setIsItemModalOpen(false);

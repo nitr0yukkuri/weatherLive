@@ -8,7 +8,8 @@ import WeatherDisplay from './WeatherDisplay';
 import CharacterDisplay from './CharacterDisplay';
 import ConfirmationModal from './ConfirmationModal';
 
-type WeatherType = "sunny" | "rainy" | "cloudy" | "snowy";
+// ★★★ ここを修正しました ★★★
+type WeatherType = "sunny" | "rainy" | "cloudy" | "snowy" | "night";
 type TimeOfDay = "morning" | "afternoon" | "evening" | "night";
 
 interface PetState {
@@ -28,14 +29,11 @@ const conversationMessages = {
     default: ["こんにちは！", "なになに？", "えへへっ", "タップしてくれてありがとう！"]
 };
 
-// ★★★ ここのロジックを修正します ★★★
 const getBackgroundGradientClass = (weather: WeatherType | null, timeOfDay: TimeOfDay): string => {
-    // 夜、かつ、天気が晴れ（または未設定）の場合のみ夜の背景にする
     if (timeOfDay === 'night' && (weather === 'sunny' || weather === null)) {
         return 'bg-night';
     }
 
-    // それ以外の天気の場合は、天気を優先する
     switch (weather) {
         case 'cloudy':
             return 'bg-cloudy';
@@ -87,7 +85,8 @@ export default function TenChanHomeClient({ initialData }) {
             if (prev === "sunny") return "cloudy";
             if (prev === "cloudy") return "rainy";
             if (prev === "rainy") return "snowy";
-            if (prev === "snowy") return "sunny";
+            if (prev === "snowy") return "night";
+            if (prev === "night") return "sunny";
             return "sunny";
         });
     };
@@ -148,7 +147,11 @@ export default function TenChanHomeClient({ initialData }) {
 
     const handleConfirmWalk = () => {
         setIsModalOpen(false);
-        router.push('/walk');
+        if (weather) {
+            router.push(`/walk?weather=${weather}`);
+        } else {
+            router.push('/walk');
+        }
     };
 
     const dynamicBackgroundClass = getBackgroundGradientClass(weather, timeOfDay);
