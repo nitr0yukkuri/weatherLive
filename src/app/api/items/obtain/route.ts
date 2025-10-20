@@ -11,26 +11,46 @@ export async function POST(request: Request) {
             return NextResponse.json({ message: '天候情報が必要です。' }, { status: 400 });
         }
 
-        // 指定された天候に紐づくアイテムを検索
-        let items = await prisma.item.findMany({
-            where: { weather: weather },
-        });
+        // 1. 全てのアイテムを取得する
+        const allItems = await prisma.item.findMany();
 
-        // もし該当する天候のアイテムがなければ、全アイテムからランダムに選ぶ（フォールバック）
-        if (items.length === 0) {
-            items = await prisma.item.findMany();
-        }
-
-        if (items.length === 0) {
+        if (allItems.length === 0) {
             return NextResponse.json({ message: 'アイテムが見つかりません。' }, { status: 404 });
         }
 
-        // 取得したアイテムの中からランダムに1つ選ぶ
-        const randomItem = items[Math.floor(Math.random() * items.length)];
+        // ★★★ ここからが新しい抽選ロジックです ★★★
 
-        console.log('APIが取得したアイテム情報:', randomItem);
+        // 2. 各アイテムに「重み」を設定
+        const weights = allItems.map(item => {
+            // 基本の重み (normal: 10, rare: 3)
+            let weight = item.rarity === 'rare' ? 3 : 10;
 
-        return NextResponse.json(randomItem);
+            // 天候ボーナス！
+            // 現在の天候とアイテムの天候が一致すれば、重みを大幅にアップ
+            if (item.weather === weather) {
+                weight += 20; // この数値を調整すると、出やすさが変わります
+            }
+            return weight;
+        });
+
+        // 3. 重みに基づいて、ランダムにアイテムを1つ選ぶ
+        const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+        let randomValue = Math.random() * totalWeight;
+
+        let selectedItem = allItems[allItems.length - 1]; // 念のためデフォルトを設定
+
+        for (let i = 0; i < allItems.length; i++) {
+            randomValue -= weights[i];
+            if (randomValue < 0) {
+                selectedItem = allItems[i];
+                break;
+            }
+        }
+        // ★★★ 新しい抽選ロジックはここまで ★★★
+
+        console.log(`APIが取得したアイテム情報 (天気: ${weather}):`, selectedItem);
+
+        return NextResponse.json(selectedItem);
 
     } catch (error) {
         console.error("Failed to obtain item:", error);
