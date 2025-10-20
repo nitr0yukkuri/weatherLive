@@ -1,25 +1,36 @@
 // src/app/api/items/obtain/route.ts
 
 import { NextResponse } from 'next/server';
-import prisma from '../../../lib/prisma'; // 修正済み
+import prisma from '../../../lib/prisma';
 
 export async function POST(request: Request) {
     try {
-        const itemName = 'あじさい';
+        const { weather } = await request.json();
 
-        const item = await prisma.item.findUnique({
-            where: { name: itemName },
-        });
-
-        if (!item) {
-            return NextResponse.json({ message: '指定されたアイテムが見つかりません。' }, { status: 404 });
+        if (!weather) {
+            return NextResponse.json({ message: '天候情報が必要です。' }, { status: 400 });
         }
 
-        // ★★★ これを追加！ ★★★
-        // データベースから取得したデータをターミナルに出力する
-        console.log('APIが取得したアイテム情報:', item);
+        // 指定された天候に紐づくアイテムを検索
+        let items = await prisma.item.findMany({
+            where: { weather: weather },
+        });
 
-        return NextResponse.json(item);
+        // もし該当する天候のアイテムがなければ、全アイテムからランダムに選ぶ（フォールバック）
+        if (items.length === 0) {
+            items = await prisma.item.findMany();
+        }
+
+        if (items.length === 0) {
+            return NextResponse.json({ message: 'アイテムが見つかりません。' }, { status: 404 });
+        }
+
+        // 取得したアイテムの中からランダムに1つ選ぶ
+        const randomItem = items[Math.floor(Math.random() * items.length)];
+
+        console.log('APIが取得したアイテム情報:', randomItem);
+
+        return NextResponse.json(randomItem);
 
     } catch (error) {
         console.error("Failed to obtain item:", error);

@@ -12,16 +12,18 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL") 
+  url      = env("DATABASE_URL")
 }
+
 // アイテムのマスターデータを管理
 model Item {
   id          Int      @id @default(autoincrement())
   name        String   @unique // アイテム名 (例: あじさい)
   description String   // アイテムの説明
-  imageUrl    String?  // 画像URL (任意)
+  imageUrl    String? // 画像URL (任意)
   rarity      String   @default("normal") // レア度 (normal, rareなど)
-  iconName    String? // ← この行を追加します
+  iconName    String?
+  weather     String? // ← この行を追加します
 }
 
 // 将来的にユーザーごとのアイテムを管理するためのモデル（参考）

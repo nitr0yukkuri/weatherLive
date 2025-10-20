@@ -12,7 +12,6 @@ import ItemGetModal from '../components/ItemGetModal';
 
 // 型定義
 type TimeOfDay = "morning" | "afternoon" | "evening" | "night";
-// ★ 1. 取得するアイテムの型を定義します
 type ObtainedItem = {
     name: string | null;
     iconName: string | null;
@@ -58,7 +57,6 @@ export default function WalkPage() {
     const [location, setLocation] = useState('位置情報を取得中...');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    // ★ 2. stateを更新して、名前とアイコン名の両方を保持できるようにします
     const [obtainedItem, setObtainedItem] = useState<ObtainedItem>({ name: null, iconName: null });
     const [isItemModalOpen, setIsItemModalOpen] = useState(false);
 
@@ -80,22 +78,23 @@ export default function WalkPage() {
                 const mappedWeather = mapWeatherType(weatherCode);
                 const hour = new Date().getHours();
                 const isNight = hour < 5 || hour >= 19;
-                setWeather((isNight && mappedWeather === 'sunny') ? 'night' : mappedWeather);
-            } catch (err: any) {
-                console.error("Failed to fetch weather on client:", err);
-                setError(err.message);
-                setLocation("天気情報の取得に失敗");
-            } finally {
-                setLoading(false);
-                // ★ 3. アイテム獲得処理を更新
+                const currentRealWeather = (isNight && mappedWeather === 'sunny') ? 'night' : mappedWeather;
+                setWeather(currentRealWeather);
+
+                // 天気情報取得後にアイテム獲得処理
                 setTimeout(async () => {
                     try {
-                        const response = await fetch('/api/items/obtain', { method: 'POST' });
+                        const response = await fetch('/api/items/obtain', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ weather: currentRealWeather }),
+                        });
                         const obtainedItemData = await response.json();
                         if (!response.ok) {
                             throw new Error('アイテムの獲得処理に失敗しました');
                         }
-                        // ★ APIから返ってきた名前とアイコン名をstateに保存
                         setObtainedItem({
                             name: obtainedItemData.name,
                             iconName: obtainedItemData.iconName
@@ -103,11 +102,17 @@ export default function WalkPage() {
                         setIsItemModalOpen(true);
                     } catch (err) {
                         console.error("Failed to get item from API:", err);
-                        // ★ エラー時のフォールバックも更新
                         setObtainedItem({ name: 'ふしぎな石', iconName: 'IoHelpCircle' });
                         setIsItemModalOpen(true);
                     }
                 }, 3000); // 3秒後
+
+            } catch (err: any) {
+                console.error("Failed to fetch weather on client:", err);
+                setError(err.message);
+                setLocation("天気情報の取得に失敗");
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -133,7 +138,6 @@ export default function WalkPage() {
 
     return (
         <div className="w-full min-h-screen bg-gray-200 flex items-center justify-center p-4">
-            {/* ★ 4. ItemGetModalにiconNameを渡す */}
             <ItemGetModal
                 isOpen={isItemModalOpen}
                 onClose={handleModalClose}
