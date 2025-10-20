@@ -1,22 +1,34 @@
 'use client';
 
 import { useState } from 'react';
-import NavItem from './NavItem';
+import NavItem from './NavItem'; // ← NavItemはここから読み込む
 import { BsCloud, BsCollectionFill } from 'react-icons/bs';
 import { MdDirectionsWalk } from 'react-icons/md';
 import { IoSettingsSharp } from 'react-icons/io5';
 import { FaSeedling } from 'react-icons/fa';
+import { useRouter } from 'next/navigation';
 
 export default function Footer({ onWalkClick }: { onWalkClick?: () => void }) {
-    const [activePage, setActivePage] = useState('コレクション');
+    const router = useRouter();
+    // 初期状態をホームページに合わせるため、空にしておくのがおすすめです
+    const [activePage, setActivePage] = useState('');
 
     const navItems = [
         { name: '天気予報', href: '/weather', icon: <BsCloud size={28} /> },
         { name: 'おさんぽ', href: undefined, icon: <MdDirectionsWalk size={28} />, onClick: onWalkClick },
-        { name: 'コレクション', href: '#', icon: <BsCollectionFill size={28} /> },
+        { name: 'コレクション', href: '/collection', icon: <BsCollectionFill size={28} /> },
         { name: '実績', href: '#', icon: <FaSeedling size={28} /> },
         { name: '設定', href: '#', icon: <IoSettingsSharp size={28} /> },
     ];
+
+    const handleNavClick = (item: any) => {
+        if (item.onClick) {
+            item.onClick();
+        } else if (item.href) {
+            setActivePage(item.name);
+            router.push(item.href);
+        }
+    };
 
     return (
         <footer className="w-full bg-white/20 backdrop-blur-sm flex-shrink-0">
@@ -24,6 +36,7 @@ export default function Footer({ onWalkClick }: { onWalkClick?: () => void }) {
                 {navItems.map((item) => (
                     <NavItem
                         key={item.name}
+                        // ★★★ hrefを渡すように修正 ★★★
                         href={item.href}
                         icon={item.icon}
                         label={item.name}
@@ -35,3 +48,4 @@ export default function Footer({ onWalkClick }: { onWalkClick?: () => void }) {
         </footer>
     );
 }
+// ★★★ このファイルにあった NavItem の定義は削除しました ★★★

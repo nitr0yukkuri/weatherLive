@@ -9,11 +9,130 @@ import Footer from '../components/Footer';
 import ItemGetModal from '../components/ItemGetModal';
 
 type ObtainedItem = {
+    id: number | null; // ★★★ id を追加 ★★★
     name: string | null;
     iconName: string | null;
 };
 
-// ★★★ 天候判定ロジックを更新 ★★★
+// (省略) mapWeatherType, getBackgroundColorClass, getWalkMessage は変更なし
+
+function WalkPageComponent() {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const [weather, setWeather] = useState<string | null>(null);
+    const [location, setLocation] = useState('...');
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [obtainedItem, setObtainedItem] = useState<ObtainedItem>({ id: null, name: null, iconName: null });
+    const [isItemModalOpen, setIsItemModalOpen] = useState(false);
+
+    const dynamicBackgroundClass = useMemo(() => getBackgroundColorClass(weather || undefined), [weather]);
+
+    useEffect(() => {
+        const debugWeather = searchParams.get('weather');
+
+        const obtainItem = (currentWeather: string) => {
+            setTimeout(async () => {
+                try {
+                    // 1. アイテムを抽選
+                    const itemResponse = await fetch('/api/items/obtain', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ weather: currentWeather }),
+                    });
+                    const item = await itemResponse.json();
+                    if (!itemResponse.ok) throw new Error('アイテム獲得失敗');
+
+                    setObtainedItem({ id: item.id, name: item.name, iconName: item.iconName });
+                    setIsItemModalOpen(true);
+
+                    // ★★★ 2. コレクションに記録 ★★★
+                    await fetch('/api/collection', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ itemId: item.id }),
+                    });
+
+                } catch (err) {
+                    setObtainedItem({ id: null, name: 'ふしぎな石', iconName: 'IoHelpCircle' });
+                    setIsItemModalOpen(true);
+                }
+            }, 3000);
+        };
+        // (省略) 以降のuseEffectの内容は変更なし
+        if (debugWeather) {
+            setWeather(debugWeather);
+            setLocation("デバッグ中");
+            setLoading(false);
+            obtainItem(debugWeather);
+            return;
+        }
+
+        const fetchCurrentWeather = (lat: number, lon: number) => {
+            fetch(`/api/weather/forecast?lat=${lat}&lon=${lon}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.list) throw new Error(data.message || '天気情報取得失敗');
+                    setLocation(data.city.name || "不明な場所");
+                    const current = data.list[0];
+                    const hour = new Date().getHours();
+                    const isNight = hour < 5 || hour >= 19;
+                    const realWeather = isNight ? 'night' : mapWeatherType(current);
+                    setWeather(realWeather);
+                    obtainItem(realWeather);
+                })
+                .catch(err => setError(err.message))
+                .finally(() => setLoading(false));
+        };
+
+        navigator.geolocation?.getCurrentPosition(
+            (pos) => fetchCurrentWeather(pos.coords.latitude, pos.coords.longitude),
+            () => {
+                setError("位置情報の取得を許可してください。");
+                setLoading(false);
+            }
+        );
+    }, [searchParams]);
+
+    const handleModalClose = () => {
+        setIsItemModalOpen(false);
+        router.push('/');
+    };
+
+    // (省略) return文は変更なし
+    return (
+        <div className="w-full min-h-screen bg-gray-200 flex items-center justify-center p-4">
+            <ItemGetModal isOpen={isItemModalOpen} onClose={handleModalClose} itemName={obtainedItem.name} iconName={obtainedItem.iconName} />
+            <main className={`w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col text-slate-700 transition-colors duration-500 ${dynamicBackgroundClass}`}>
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-black/80 rounded-b-xl z-10"></div>
+                <div className="flex-grow flex flex-col p-6 items-center justify-between">
+                    <div className="w-full">
+                        <Link href="/" className="text-slate-500 mb-6 inline-block text-sm hover:text-slate-700 transition-colors">← ホーム</Link>
+                        <header className="mb-8 text-center">
+                            <h1 className="text-3xl font-extrabold text-slate-800 tracking-wider">おさんぽ中...</h1>
+                            <p className="text-slate-500 mt-1">{location}</p>
+                        </header>
+                    </div>
+                    <div className="flex flex-col items-center justify-center flex-grow p-4">
+                        {loading ? <p className="animate-pulse">準備中...</p> : error ? <p className="text-red-600">{error}</p> : (
+                            <>
+                                <div className="mb-4"><WeatherIcon type={weather || 'sunny'} size={60} /></div>
+                                <div className="w-40 h-40 rounded-full bg-white p-2 mb-4">
+                                    <CharacterFace mood={'happy'} />
+                                </div>
+                                <div className="p-3 bg-white/70 backdrop-blur-sm rounded-xl shadow-md max-w-xs text-center">
+                                    <p className="text-slate-700 font-medium">{getWalkMessage(weather || undefined)}</p>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>
+                <Footer />
+            </main>
+        </div>
+    );
+}
+
 const mapWeatherType = (weatherData: any): string => {
     const main = weatherData.weather[0].main.toLowerCase();
     const windSpeed = weatherData.wind.speed;
@@ -55,113 +174,6 @@ const getWalkMessage = (weatherType?: string): string => {
     }
 }
 
-function WalkPageComponent() {
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const [weather, setWeather] = useState<string | null>(null);
-    const [location, setLocation] = useState('...');
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [obtainedItem, setObtainedItem] = useState<ObtainedItem>({ name: null, iconName: null });
-    const [isItemModalOpen, setIsItemModalOpen] = useState(false);
-
-    const dynamicBackgroundClass = useMemo(() => getBackgroundColorClass(weather || undefined), [weather]);
-
-    useEffect(() => {
-        const debugWeather = searchParams.get('weather');
-
-        const obtainItem = (currentWeather: string) => {
-            setTimeout(async () => {
-                try {
-                    const response = await fetch('/api/items/obtain', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ weather: currentWeather }),
-                    });
-                    const item = await response.json();
-                    if (!response.ok) throw new Error('アイテム獲得失敗');
-                    setObtainedItem({ name: item.name, iconName: item.iconName });
-                    setIsItemModalOpen(true);
-                } catch (err) {
-                    setObtainedItem({ name: 'ふしぎな石', iconName: 'IoHelpCircle' });
-                    setIsItemModalOpen(true);
-                }
-            }, 3000);
-        };
-
-        if (debugWeather) {
-            setWeather(debugWeather);
-            setLocation("デバッグ中");
-            setLoading(false);
-            obtainItem(debugWeather);
-            return;
-        }
-
-        const fetchCurrentWeather = (lat: number, lon: number) => {
-            fetch(`/api/weather/forecast?lat=${lat}&lon=${lon}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (!data.list) throw new Error(data.message || '天気情報取得失敗');
-                    setLocation(data.city.name || "不明な場所");
-                    const current = data.list[0];
-                    const hour = new Date().getHours();
-                    const isNight = hour < 5 || hour >= 19;
-                    const realWeather = isNight ? 'night' : mapWeatherType(current);
-                    setWeather(realWeather);
-                    obtainItem(realWeather);
-                })
-                .catch(err => setError(err.message))
-                .finally(() => setLoading(false));
-        };
-
-        navigator.geolocation?.getCurrentPosition(
-            (pos) => fetchCurrentWeather(pos.coords.latitude, pos.coords.longitude),
-            () => {
-                setError("位置情報の取得を許可してください。");
-                setLoading(false);
-            }
-        );
-    }, [searchParams]);
-
-    const handleModalClose = () => {
-        setIsItemModalOpen(false);
-        router.push('/');
-    };
-
-    return (
-        <div className="w-full min-h-screen bg-gray-200 flex items-center justify-center p-4">
-            <ItemGetModal isOpen={isItemModalOpen} onClose={handleModalClose} itemName={obtainedItem.name} iconName={obtainedItem.iconName} />
-            <main className={`w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col text-slate-700 transition-colors duration-500 ${dynamicBackgroundClass}`}>
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-black/80 rounded-b-xl z-10"></div>
-                <div className="flex-grow flex flex-col p-6 items-center justify-between">
-                    <div className="w-full">
-                        <Link href="/" className="text-slate-500 mb-6 inline-block text-sm hover:text-slate-700 transition-colors">← ホーム</Link>
-                        <header className="mb-8 text-center">
-                            <h1 className="text-3xl font-extrabold text-slate-800 tracking-wider">おさんぽ中...</h1>
-                            <p className="text-slate-500 mt-1">{location}</p>
-                        </header>
-                    </div>
-                    <div className="flex flex-col items-center justify-center flex-grow p-4">
-                        {loading ? <p className="animate-pulse">準備中...</p> : error ? <p className="text-red-600">{error}</p> : (
-                            <>
-                                <div className="mb-4"><WeatherIcon type={weather || 'sunny'} size={60} /></div>
-                                <div className="w-40 h-40 rounded-full bg-white p-2 mb-4">
-                                    <CharacterFace mood={'happy'} />
-                                </div>
-                                <div className="p-3 bg-white/70 backdrop-blur-sm rounded-xl shadow-md max-w-xs text-center">
-                                    <p className="text-slate-700 font-medium">{getWalkMessage(weather || undefined)}</p>
-                                </div>
-                            </>
-                        )}
-                    </div>
-                </div>
-                <Footer />
-            </main>
-        </div>
-    );
-}
-
-// Suspenseでラップしてエクスポート
 export default function WalkPage() {
     return (
         <Suspense fallback={<div>Loading...</div>}>

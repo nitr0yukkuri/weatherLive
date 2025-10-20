@@ -7,7 +7,6 @@ import WeatherDisplay from './WeatherDisplay';
 import CharacterDisplay from './CharacterDisplay';
 import ConfirmationModal from './ConfirmationModal';
 
-// ★★★ 型定義を更新 ★★★
 type WeatherType = "sunny" | "clear" | "rainy" | "cloudy" | "snowy" | "thunderstorm" | "windy" | "night";
 type TimeOfDay = "morning" | "afternoon" | "evening" | "night";
 
@@ -15,7 +14,6 @@ interface PetState {
     name: string;
 }
 
-// ★★★ セリフを追加 ★★★
 const conversationMessages = {
     sunny: ["おひさまが気持ちいいね！", "こんな日はおさんぽしたくなるな〜"],
     clear: ["雲ひとつないね！", "空がとっても青いよ！"],
@@ -28,9 +26,9 @@ const conversationMessages = {
     default: ["こんにちは！", "なになに？", "えへへっ"]
 };
 
-// ★★★ 背景クラスを更新 ★★★
-const getBackgroundGradientClass = (weather: WeatherType | null, timeOfDay: TimeOfDay): string => {
-    if (timeOfDay === 'night') return 'bg-night';
+// ★★★ ここを修正しました ★★★
+// 夜の時の優先判定を削除し、常に天気に基づいて背景を決定するようにします
+const getBackgroundGradientClass = (weather: WeatherType | null): string => {
     switch (weather) {
         case 'clear': return 'bg-clear';
         case 'cloudy': return 'bg-cloudy';
@@ -38,12 +36,12 @@ const getBackgroundGradientClass = (weather: WeatherType | null, timeOfDay: Time
         case 'thunderstorm': return 'bg-thunderstorm';
         case 'snowy': return 'bg-snowy';
         case 'windy': return 'bg-windy';
+        case 'night': return 'bg-night'; // 'night' という天候タイプを追加
         case 'sunny':
         default: return 'bg-sunny';
     }
 };
 
-// ★★★ 天候判定ロジックを更新 ★★★
 const mapWeatherType = (weatherData: any): WeatherType => {
     const main = weatherData.weather[0].main.toLowerCase();
     const windSpeed = weatherData.wind.speed;
@@ -53,15 +51,14 @@ const mapWeatherType = (weatherData: any): WeatherType => {
     if (main.includes("rain")) return "rainy";
     if (main.includes("snow")) return "snowy";
     if (main.includes("clear")) return "clear";
-    if (main.includes("clouds")) return "sunny"; // 晴れ間ありの曇りは 'sunny' とする
-    return "sunny"; // デフォルト
+    if (main.includes("clouds")) return "sunny";
+    return "sunny";
 };
-
 
 export default function TenChanHomeClient({ initialData }) {
     const router = useRouter();
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [weather, setWeather] = useState<WeatherType | null>(initialData?.weather || null);
+    const [weather, setWeather] = useState<WeatherType | null>(initialData?.weather || 'sunny');
     const [currentTime, setCurrentTime] = useState(new Date());
     const [temperature, setTemperature] = useState<number | null>(initialData?.temperature || null);
     const [petState] = useState<PetState>({ name: "てんちゃん" });
@@ -69,18 +66,6 @@ export default function TenChanHomeClient({ initialData }) {
     const [isClient, setIsClient] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
     const messageTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-    const handleCharacterClick = () => {
-        if (messageTimeoutRef.current) { clearTimeout(messageTimeoutRef.current); }
-        const currentHour = new Date().getHours();
-        const isNight = currentHour < 5 || currentHour >= 19;
-        let messageOptions = conversationMessages.default;
-        if (isNight) { messageOptions = conversationMessages.night; }
-        else if (weather && conversationMessages[weather]) { messageOptions = conversationMessages[weather]; }
-        const randomMessage = messageOptions[Math.floor(Math.random() * messageOptions.length)];
-        setMessage(randomMessage);
-        messageTimeoutRef.current = setTimeout(() => { setMessage(null); }, 2000);
-    };
 
     const getTimeOfDay = (date: Date): TimeOfDay => {
         const hour = date.getHours();
@@ -91,6 +76,19 @@ export default function TenChanHomeClient({ initialData }) {
     };
     const timeOfDay = getTimeOfDay(currentTime);
 
+    const handleCharacterClick = () => {
+        if (messageTimeoutRef.current) { clearTimeout(messageTimeoutRef.current); }
+        const isNight = timeOfDay === 'night';
+        let messageOptions = conversationMessages.default;
+        if (isNight) { messageOptions = conversationMessages.night; }
+        else if (weather && conversationMessages[weather]) { messageOptions = conversationMessages[weather]; }
+        const randomMessage = messageOptions[Math.floor(Math.random() * messageOptions.length)];
+        setMessage(randomMessage);
+        messageTimeoutRef.current = setTimeout(() => { setMessage(null); }, 2000);
+    };
+
+    // ★★★ ここを修正しました ★★★
+    // 'night' もデバッグのサイクルに含めます
     const cycleWeather = () => {
         setWeather(prev => {
             const weathers: WeatherType[] = ["sunny", "clear", "cloudy", "rainy", "thunderstorm", "snowy", "windy", "night"];
@@ -101,7 +99,7 @@ export default function TenChanHomeClient({ initialData }) {
 
     useEffect(() => {
         setIsClient(true);
-        if (initialData) return; // サーバーからの初期データがあればクライアントでの取得はスキップ
+        if (initialData) return;
 
         const fetchWeatherData = () => {
             navigator.geolocation?.getCurrentPosition(
@@ -133,12 +131,19 @@ export default function TenChanHomeClient({ initialData }) {
 
     const handleConfirmWalk = () => {
         setIsModalOpen(false);
-        const finalWeather = timeOfDay === 'night' ? 'night' : weather;
-        router.push(`/walk?weather=${finalWeather || 'sunny'}`);
+        // おさんぽの時は、実際の時間（夜かどうか）を最優先する
+        const walkWeather = timeOfDay === 'night' ? 'night' : weather;
+        router.push(`/walk?weather=${walkWeather}`);
     };
 
-    const dynamicBackgroundClass = getBackgroundGradientClass(weather, timeOfDay);
-    const displayWeather = timeOfDay === 'night' ? 'night' : weather;
+    // ★★★ ここを修正しました ★★★
+    // 表示する天気を決定。夜 + (晴れ or 快晴) の場合は 'night' をアイコン表示用に使う
+    const displayWeatherType = (timeOfDay === 'night' && (weather === 'sunny' || weather === 'clear'))
+        ? 'night'
+        : weather;
+
+    const dynamicBackgroundClass = getBackgroundGradientClass(displayWeatherType);
+
 
     return (
         <div className="w-full min-h-screen bg-gray-200 flex items-center justify-center p-4">
@@ -154,7 +159,7 @@ export default function TenChanHomeClient({ initialData }) {
                 <div className="relative z-10 flex flex-col flex-grow">
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-black/80 rounded-b-xl"></div>
                     <WeatherDisplay
-                        weather={displayWeather}
+                        weather={displayWeatherType} // 表示用の天気を渡す
                         timeOfDay={timeOfDay}
                         isClient={isClient}
                         currentTime={currentTime}

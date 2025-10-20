@@ -22,15 +22,17 @@ export default function WeatherDisplay({
     location,
     onCycleWeather,
 }: WeatherDisplayProps) {
-    // ★★★ 表示する天気を決定するロジックを修正 ★★★
-    const displayWeather = (timeOfDay === 'night' && (weather === 'sunny' || weather === null)) ? 'night' : weather;
+
+    // ★★★ ここを修正しました ★★★
+    // 親コンポーネントから渡された天気をそのまま使うようにシンプル化
+    const displayWeather = weather;
 
     return (
         <div className="pt-8 text-center h-[150px] flex flex-col justify-center">
             <div className="flex flex-col items-center gap-2 cursor-pointer" onClick={onCycleWeather}>
                 <AnimatePresence mode="wait">
                     <motion.div
-                        key={displayWeather || timeOfDay}
+                        key={displayWeather || 'loading'}
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 20 }}
