@@ -9,31 +9,31 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // ★★★ 修正箇所: DATABASE_URL から PRISMA_DATABASE_URL に変更 ★★★
+  url      = env("PRISMA_DATABASE_URL")
 }
 
 // アイテムのマスターデータ
 model Item {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique
+  id          Int             @id @default(autoincrement())
+  name        String          @unique
   description String
-  rarity      String   @default("normal")
+  rarity      String          @default("normal")
   iconName    String?
   weather     String?
   inventories UserInventory[] // 連携を追加
 }
 
-// ★★★ 修正点: ユーザーの実績進捗を記録するテーブルを追加（エラー解消済み） ★★★
+// ユーザーの実績進捗を記録するテーブル
 model UserProgress {
-  id Int @id @default(1) // ユーザーが一人を想定し、常にID: 1
-  walkCount Int @default(0) // おさんぽ回数
+  id        Int @id @default(1) // ユーザーが一人を想定し、常にID: 1
+  walkCount Int @default(0)    // おさんぽ回数
 }
-// ★★★ ここまで追加 ★★★
 
 // 手に入れたアイテムを記録するテーブル
 model UserInventory {
-  id       Int    @id @default(autoincrement())
-  itemId   Int    @unique // アイテムID
-  quantity Int    @default(0) // 所持数
-  item     Item   @relation(fields: [itemId], references: [id])
+  id       Int  @id @default(autoincrement())
+  itemId   Int  @unique      // アイテムID
+  quantity Int  @default(0)  // 所持数
+  item     Item @relation(fields: [itemId], references: [id])
 }
