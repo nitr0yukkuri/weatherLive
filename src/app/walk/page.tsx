@@ -27,13 +27,22 @@ function WalkPageComponent() {
     const [error, setError] = useState<string | null>(null);
     const [obtainedItem, setObtainedItem] = useState<ObtainedItem>({ id: null, name: null, iconName: null });
     const [isItemModalOpen, setIsItemModalOpen] = useState(false);
+    // ★★★ 修正点1: 処理中フラグを追加 ★★★
+    const [isProcessing, setIsProcessing] = useState(false);
+
 
     const dynamicBackgroundClass = useMemo(() => getBackgroundColorClass(weather || undefined), [weather]);
 
     useEffect(() => {
+        // ★★★ 修正点2: 既に処理中なら何もしない ★★★
+        if (isProcessing) return;
+
         const debugWeather = searchParams.get('weather');
 
         const obtainItem = (currentWeather: string) => {
+            // ★★★ 修正点3: 処理開始フラグを立てる ★★★
+            setIsProcessing(true);
+
             setTimeout(async () => {
                 try {
                     // 1. アイテムを抽選
@@ -69,6 +78,10 @@ function WalkPageComponent() {
                         console.error('おさんぽ回数の記録に失敗', e);
                     }
 
+                } finally {
+                    setLoading(false);
+                    // 注意: 開発モードではuseEffectのクリーンアップ後に再実行される可能性を残すが、
+                    // このフラグがあれば2回目の obtainItem 実行はブロックされる
                 }
             }, 3000);
         };
@@ -77,6 +90,7 @@ function WalkPageComponent() {
             setWeather(debugWeather);
             setLocation("デバッグ中");
             setLoading(false);
+            // debugモードでもフラグを立てて実行
             obtainItem(debugWeather);
             return;
         }
@@ -94,8 +108,12 @@ function WalkPageComponent() {
                     setWeather(realWeather);
                     obtainItem(realWeather);
                 })
-                .catch(err => setError(err.message))
-                .finally(() => setLoading(false));
+                .catch(err => {
+                    setError(err.message);
+                    setLoading(false);
+                    // エラー時もフラグをリセットし、再実行を防ぐ（このロジックは obtainItem に移譲）
+                    setIsProcessing(false);
+                });
         };
 
         navigator.geolocation?.getCurrentPosition(
@@ -103,8 +121,11 @@ function WalkPageComponent() {
             () => {
                 setError("位置情報の取得を許可してください。");
                 setLoading(false);
+                // エラー時もフラグをリセットし、再実行を防ぐ（このロジックは obtainItem に移譲）
+                setIsProcessing(false);
             }
         );
+        // ★★★ 修正点4: 依存配列から isProcessing を意図的に除外 (初回実行のみを保証するため) ★★★
     }, [searchParams]);
 
     const handleModalClose = () => {

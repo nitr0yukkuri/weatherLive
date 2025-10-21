@@ -6,17 +6,12 @@ import prisma from '../../lib/prisma';
 // ユーザーの進捗を取得するAPI
 export async function GET() {
     try {
-        // ユーザーが一人である前提で、ID 1 のレコードを取得
-        let progress = await prisma.userProgress.findUnique({
+        // ★★★ 修正箇所: findUnique/create の代わりに upsert を使用し、P2002エラーを回避 ★★★
+        const progress = await prisma.userProgress.upsert({
             where: { id: 1 },
+            update: {}, // 存在する場合、更新は不要なので空のオブジェクト
+            create: { id: 1, walkCount: 0 }, // 存在しない場合のみ作成
         });
-
-        // レコードが存在しない場合は作成（初期化）
-        if (!progress) {
-            progress = await prisma.userProgress.create({
-                data: { id: 1, walkCount: 0 },
-            });
-        }
 
         return NextResponse.json(progress);
     } catch (error) {
