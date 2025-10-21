@@ -18,9 +18,9 @@ export default function Footer({ onWalkClick }: { onWalkClick?: () => void }) {
     const navItems = [
         { name: '天気予報', href: '/weather', icon: <BsCloud size={28} /> },
         { name: 'おさんぽ', href: undefined, icon: <MdDirectionsWalk size={28} />, onClick: onWalkClick },
-        // ★★★ ここを修正しました: 'コレクション' を 'ずかん' に変更 ★★★
         { name: 'ずかん', href: '/collection', icon: <BsCollectionFill size={28} /> },
-        { name: '実績', href: '#', icon: <FaSeedling size={28} /> },
+        // ★★★ 修正点: hrefを '/achievements' に変更 ★★★
+        { name: '実績', href: '/achievements', icon: <FaSeedling size={28} /> },
         { name: '設定', href: '#', icon: <IoSettingsSharp size={28} /> },
     ];
 

@@ -1,3 +1,5 @@
+// nitr0yukkuri/weatherlive/weatherLive-b3045c8544f8e00c4dffca0c24f4db06f823d485/src/app/layout.tsx
+
 import type { Metadata } from "next";
 // M PLUS Rounded 1c フォントをインポート
 import { M_PLUS_Rounded_1c } from "next/font/google";
@@ -25,7 +27,7 @@ export default function RootLayout({
             {/* bodyタグにフォントのクラスを適用 */}
             <body className={rounded_mplus.className}>
                 {/* Tailwind CSSにクラスを認識させるためのおまじない */}
-                <div className="hidden bg-sunny bg-cloudy bg-rainy bg-snowy bg-night"></div>
+                <div className="hidden bg-sunny bg-cloudy bg-rainy bg-snowy bg-night bg-green-100"></div>
 
                 {children}
             </body>

@@ -1,3 +1,5 @@
+// nitr0yukkuri/weatherlive/weatherLive-b3045c8544f8e00c4dffca0c24f4db06f823d485/src/app/walk/page.tsx
+
 'use client';
 
 import { useState, useEffect, useMemo, Suspense } from 'react';
@@ -14,7 +16,7 @@ type ObtainedItem = {
     iconName: string | null;
 };
 
-// (省略) mapWeatherType, getBackgroundColorClass, getWalkMessage は変更なし
+// (mapWeatherType, getBackgroundColorClass, getWalkMessage は省略)
 
 function WalkPageComponent() {
     const router = useRouter();
@@ -46,16 +48,27 @@ function WalkPageComponent() {
                     setObtainedItem({ id: item.id, name: item.name, iconName: item.iconName });
                     setIsItemModalOpen(true);
 
-                    // ★★★ 2. コレクションに記録 ★★★
+                    // 2. コレクションに記録
                     await fetch('/api/collection', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ itemId: item.id }),
                     });
 
+                    // ★★★ 修正点: おさんぽ回数を記録するAPIを呼び出し追加 ★★★
+                    await fetch('/api/walk/complete', { method: 'POST' });
+
                 } catch (err) {
                     setObtainedItem({ id: null, name: 'ふしぎな石', iconName: 'IoHelpCircle' });
                     setIsItemModalOpen(true);
+
+                    // ★★★ 修正点: エラー時もおさんぽ回数だけは記録を試みる ★★★
+                    try {
+                        await fetch('/api/walk/complete', { method: 'POST' });
+                    } catch (e) {
+                        console.error('おさんぽ回数の記録に失敗', e);
+                    }
+
                 }
             }, 3000);
         };
