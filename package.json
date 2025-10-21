@@ -4,13 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "db:migrate": "npx dotenv-cli -e .env.local -- prisma migrate dev",
-    "db:seed": "npx dotenv-cli -e .env.local -- node prisma/seed.mjs",
-    "db:studio": "npx dotenv-cli -e .env.local -- prisma studio",
-    "db:generate": "npx dotenv-cli -e .env.local -- prisma generate"
+    "db:migrate": "dotenv -e .env.local -- prisma migrate dev",
+    "db:seed": "dotenv -e .env.local -- node prisma/seed.mjs",
+    "db:studio": "dotenv -e .env.local -- prisma studio"
   },
   "dependencies": {
     "@prisma/client": "^6.17.1",
