@@ -1,3 +1,5 @@
+// nitr0yukkuri/weatherlive/weatherLive-b3045c8544f8e00c4dffca0c24f4db06f823d485/src/app/components/Footer.tsx
+
 'use client';
 
 import { useState } from 'react';
@@ -16,7 +18,8 @@ export default function Footer({ onWalkClick }: { onWalkClick?: () => void }) {
     const navItems = [
         { name: '天気予報', href: '/weather', icon: <BsCloud size={28} /> },
         { name: 'おさんぽ', href: undefined, icon: <MdDirectionsWalk size={28} />, onClick: onWalkClick },
-        { name: 'コレクション', href: '/collection', icon: <BsCollectionFill size={28} /> },
+        // ★★★ ここを修正しました: 'コレクション' を 'ずかん' に変更 ★★★
+        { name: 'ずかん', href: '/collection', icon: <BsCollectionFill size={28} /> },
         { name: '実績', href: '#', icon: <FaSeedling size={28} /> },
         { name: '設定', href: '#', icon: <IoSettingsSharp size={28} /> },
     ];
