@@ -26,7 +26,7 @@ export default function RootLayout({
         <html lang="ja">
             {/* bodyタグにフォントのクラスを適用 */}
             <body className={rounded_mplus.className}>
-                {/* Tailwind CSSにクラスを認識させるためのおまじない */}
+                {/* Tailwinad CSSにクラスを認識させるためのおまじない */}
                 <div className="hidden bg-sunny bg-cloudy bg-rainy bg-snowy bg-night bg-green-100"></div>
 
                 {children}
