@@ -6,17 +6,26 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import ItemIcon from '../components/ItemIcon';
 import Footer from '../components/Footer';
+// ★ 1. ItemDetailModalをインポート
+import ItemDetailModal from '../components/ItemDetailModal';
+
+// ★ 2. CollectionItemの型定義に rarity と weather を追加
 interface CollectionItem {
     id: number;
     name: string;
     description: string;
     iconName: string | null;
     quantity: number;
+    rarity: string;
+    weather: string | null;
 }
 
 export default function CollectionPage() {
     const [collection, setCollection] = useState<CollectionItem[]>([]);
     const [loading, setLoading] = useState(true);
+    // ★ 3. 選択されたアイテムとモーダルの状態を追加
+    const [selectedItem, setSelectedItem] = useState<CollectionItem | null>(null);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
     useEffect(() => {
         const fetchCollection = async () => {
@@ -34,8 +43,24 @@ export default function CollectionPage() {
         fetchCollection();
     }, []);
 
+    // ★ 4. アイテムクリック時のハンドラ
+    const handleItemClick = (item: CollectionItem) => {
+        // 所持しているアイテム（数量が1以上）のみ詳細を表示
+        if (item.quantity > 0) {
+            setSelectedItem(item);
+            setIsDetailModalOpen(true);
+        }
+    };
+
     return (
         <div className="w-full min-h-screen bg-gray-200 flex items-center justify-center p-4">
+            {/* ★ 5. ItemDetailModalのレンダリングを追加 */}
+            <ItemDetailModal
+                isOpen={isDetailModalOpen}
+                onClose={() => setIsDetailModalOpen(false)}
+                item={selectedItem}
+            />
+
             <main className="w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col bg-orange-100 text-slate-700">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-black/80 rounded-b-xl z-10"></div>
 
@@ -51,7 +76,14 @@ export default function CollectionPage() {
                     ) : (
                         <div className="grid grid-cols-4 gap-4">
                             {collection.map(item => (
-                                <div key={item.id} className="flex flex-col items-center justify-center p-2 bg-white/60 rounded-xl aspect-square">
+                                // ★ 6. クリックハンドラとスタイルを適用したボタンに修正
+                                <button
+                                    key={item.id}
+                                    onClick={() => handleItemClick(item)}
+                                    // 所持しているアイテムはクリック時に強調するスタイルを追加
+                                    className={`flex flex-col items-center justify-center p-2 bg-white/60 rounded-xl aspect-square transition-transform ${item.quantity > 0 ? 'cursor-pointer hover:scale-[1.05]' : ''}`}
+                                    disabled={item.quantity === 0}
+                                >
                                     <div className={`relative transition-opacity ${item.quantity === 0 ? 'opacity-30' : ''}`}>
                                         <ItemIcon name={item.iconName} size={40} />
                                         {item.quantity > 0 && (
@@ -63,7 +95,7 @@ export default function CollectionPage() {
                                     <p className={`text-xs text-center mt-1 ${item.quantity === 0 ? 'text-slate-400' : 'text-slate-600 font-bold'}`}>
                                         {item.quantity > 0 ? item.name : '？？？'}
                                     </p>
-                                </div>
+                                </button>
                             ))}
                         </div>
                     )}
