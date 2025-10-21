@@ -3,14 +3,17 @@
 import { NextResponse } from 'next/server';
 import prisma from '../../lib/prisma';
 
+// ★★★ 修正点: dynamic export を追加 ★★★
+export const dynamic = 'force-dynamic';
+
 // ユーザーの進捗を取得するAPI
 export async function GET() {
     try {
-        // ★★★ 修正箇所: findUnique/create の代わりに upsert を使用し、P2002エラーを回避 ★★★
+        // ... (省略)
         const progress = await prisma.userProgress.upsert({
             where: { id: 1 },
-            update: {}, // 存在する場合、更新は不要なので空のオブジェクト
-            create: { id: 1, walkCount: 0 }, // 存在しない場合のみ作成
+            update: {},
+            create: { id: 1, walkCount: 0 },
         });
 
         return NextResponse.json(progress);
