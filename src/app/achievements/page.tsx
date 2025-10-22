@@ -32,7 +32,7 @@ const masterAchievements: Achievement[] = [
         id: 1,
         title: 'はじめてのおさんぽ',
         description: 'はじめておさんぽに出かけた',
-        icon: <FaSeedling size={24} />,
+        icon: <FaSeedling size={24} />, // ← 実績固有のアイコン
         isUnlocked: false,
         progressKey: 'walkCount',
         goal: 1,
@@ -42,7 +42,7 @@ const masterAchievements: Achievement[] = [
         id: 2,
         title: 'おさんぽマスター',
         description: 'さんぽに1000回行った',
-        icon: <FaTrophy size={24} />,
+        icon: <FaTrophy size={24} />, // ← 実績固有のアイコン
         isUnlocked: false,
         progressKey: 'walkCount',
         goal: 1000,
@@ -53,7 +53,7 @@ const masterAchievements: Achievement[] = [
         id: 3,
         title: '雲ひとつないコレクター',
         description: '快晴の日にアイテムを5種類集めた（ダミー）',
-        icon: <FaTrophy size={24} />,
+        icon: <FaTrophy size={24} />, // ← 実績固有のアイコン (仮)
         isUnlocked: false,
         progressKey: 'walkCount', // 暫定でwalkCountを使用
         goal: 500,
@@ -113,27 +113,28 @@ export default function AchievementsPage() {
         fetchProgress();
     }, []);
 
-    // ★★★ Figmaのデザインに合わせた実績カードコンポーネント ★★★
+    // 実績カードコンポーネント
     const AchievementItem = ({ achievement }: { achievement: Achievement & { progress: number } }) => {
         // 進捗が100%を超えないように調整
         const progressPercentage = Math.min((achievement.progress / achievement.goal) * 100, 100);
         const progressBarColor = achievement.isUnlocked ? 'bg-green-600' : 'bg-yellow-500';
 
         return (
-            <div className={`p-4 rounded-2xl shadow-lg transition-all 
+            <div className={`p-4 rounded-2xl shadow-lg transition-all
                 ${achievement.isUnlocked ? 'bg-white' : 'bg-white/80 opacity-90'}`}
             >
                 <div className="flex items-start gap-4">
-                    {/* アイコン部分 (Figmaの画像に合わせたデザイン) */}
-                    <div className="flex-shrink-0 w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center p-1 border border-gray-300">
-                        {/* 達成状況に応じてアイコンを出し分け */}
-                        {/* Figmaのデザインに合わせて、達成済みは王冠、未達成は初心者マークをイメージしたアイコン（仮） */}
-                        {achievement.isUnlocked ? (
-                            <div className="text-4xl">👑</div>
-                        ) : (
-                            <div className="text-4xl">🎓</div>
-                        )}
+                    {/* アイコン部分 */}
+                    {/* ★★★ 修正箇所 ★★★ */}
+                    <div className={`flex-shrink-0 w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center p-1 border border-gray-300
+                        ${achievement.isUnlocked ? 'text-green-600' : 'text-gray-400 opacity-70'}
+                    `}>
+                        {/* 達成状況に関わらず、実績データに設定されたアイコンを表示 */}
+                        <div className="text-3xl">
+                            {achievement.icon}
+                        </div>
                     </div>
+                    {/* ★★★ 修正ここまで ★★★ */}
 
                     <div className="flex-grow">
                         <p className={`font-bold text-lg ${achievement.isUnlocked ? 'text-slate-800' : 'text-slate-600'}`}>
