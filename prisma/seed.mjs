@@ -65,7 +65,7 @@ const initialItems = [
     // 【夜 (night) の日】
     { name: '月のしずく', description: '月の光が集まってできたような、優しい光の玉。', rarity: 'epic', iconName: 'BsMoonStarsFill', weather: 'night' },
     { name: '真夜中の花', description: '夜にだけそっと咲く、珍しい花。', rarity: 'rare', iconName: 'GiNightSky', weather: 'night' }, // アイコン候補変更
-    { name: '眠りの砂', description: '持っていると少し眠たくなる、キラキラした砂。', rarity: 'uncommon', iconName: 'GiSandDust', weather: 'night' },
+    { name: '眠りの砂', description: '持っていると少し眠たくなる、キラキラした砂。', rarity: 'uncommon', iconName: 'GiSparkles', weather: 'night' },
     // --- ▲▲▲ 追加ここまで ▲▲▲ ---
 ];
 
