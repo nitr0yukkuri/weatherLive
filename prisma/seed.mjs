@@ -5,6 +5,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 const initialItems = [
+    // --- 既存のアイテム ---
     { name: 'ひまわりのタネ', description: '太陽が好きな花のタネ。晴れた日に見つかる。', rarity: 'normal', iconName: 'IoSunny', weather: 'sunny' },
     { name: 'たいようのいし', description: '持っていると心がポカポカする不思議な石。', rarity: 'rare', iconName: 'BsSunFill', weather: 'clear' },
     { name: 'あじさい', description: '雨の日にきれいに咲く花。', rarity: 'normal', iconName: 'IoRainy', weather: 'rainy' },
@@ -14,26 +15,75 @@ const initialItems = [
     { name: '雪の結晶', description: 'キラキラと輝く、冬のたからもの。', rarity: 'normal', iconName: 'IoSnow', weather: 'snowy' },
     { name: 'ほしのかけら', description: '夜空から落ちてきた、小さな光。', rarity: 'rare', iconName: 'FaStar', weather: 'night' },
     { name: 'かぜぐるま', description: '風の力でくるくる回るおもちゃ。', rarity: 'normal', iconName: 'GiWhirlwind', weather: 'windy' },
-    // ▼▼▼ こけしアイテムを「まいごのこけし」に変更 ▼▼▼
-    {
-        name: 'まいごのこけし', // 名前を変更
-        description: 'あれ？こんなところにこけしが…。持ち主を探しているのかな？', // 説明を変更
-        rarity: 'rare', // レア度を rare に変更
-        iconName: 'IoBodyOutline', // アイコン名はそのまま
-        weather: null // どの天気でも見つかる
-    },
-    // ▲▲▲ 変更ここまで ▲▲▲
+    { name: 'まいごのこけし', description: 'あれ？こんなところにこけしが…。持ち主を探しているのかな？', rarity: 'rare', iconName: 'IoBodyOutline', weather: null },
+
+    // --- ▼▼▼ 新しく追加するアイテム (30個) ▼▼▼ ---
+
+    // 【いつでも見つかるかも？ (weather: null)】
+    { name: 'きれいな小石', description: '道ばたで見つけた、すべすべしたきれいな石。', rarity: 'normal', iconName: 'GiStoneBlock', weather: null },
+    { name: 'どんぐり', description: 'コロコロと丸い、木の実。帽子をかぶっているみたい。', rarity: 'normal', iconName: 'GiAcorn', weather: null },
+    { name: 'なくしたボタン', description: '誰かが落としていったのかな？ちょっと古そうなボタン。', rarity: 'normal', iconName: 'BsRecordCircle', weather: null },
+    { name: 'ふつうの葉っぱ', description: '特になんでもない、どこにでもある葉っぱ。', rarity: 'normal', iconName: 'FaLeaf', weather: null },
+    { name: '小枝', description: 'ポキッと折れた小さな木の枝。', rarity: 'normal', iconName: 'GiStickSplinter', weather: null },
+    { name: 'たんぽぽの綿毛', description: '風に乗って飛んできたふわふわの綿毛。', rarity: 'normal', iconName: 'FaFeatherAlt', weather: null },
+    { name: 'ビー玉', description: 'キラキラ光るガラス玉。誰かが落としたのかな？', rarity: 'uncommon', iconName: 'BsRecordCircleFill', weather: null },
+    { name: '鳥の羽根', description: 'ふわりと舞い落ちてきた、きれいな羽根。', rarity: 'uncommon', iconName: 'FaFeather', weather: null },
+    { name: 'シーグラス', description: '波にもまれて丸くなったガラスのかけら。', rarity: 'uncommon', iconName: 'GiSeaDragon', weather: null }, // アイコン候補変更
+    { name: '四つ葉のクローバー', description: '見つけるとラッキーなことがあるらしい。', rarity: 'rare', iconName: 'GiClover', weather: null },
+    { name: 'ちいさなカギ', description: 'とても小さい古いカギ。何を開けるんだろう？', rarity: 'rare', iconName: 'FaKey', weather: null },
+    { name: '時のかけら', description: '時の流れを感じさせる、不思議な輝きを持つかけら。', rarity: 'legendary', iconName: 'GiSandsOfTime', weather: null },
+
+    // 【晴れ (sunny) の日】
+    { name: '日向の石', description: 'おひさまを浴びてぽかぽか温かい石。', rarity: 'normal', iconName: 'GiStonePile', weather: 'sunny' },
+    { name: '蝶々の抜け殻', description: '蝶々が旅立った後の殻。', rarity: 'uncommon', iconName: 'GiButterfly', weather: 'sunny' },
+
+    // 【快晴 (clear) の日】
+    { name: '青空のかけら', description: '澄み切った空の色を映したような石。', rarity: 'uncommon', iconName: 'BsGem', weather: 'clear' },
+    { name: '飛行機雲のなごり', description: '空に残った飛行機雲の、ほんの一部。', rarity: 'rare', iconName: 'IoPaperPlaneOutline', weather: 'clear' },
+
+    // 【雨 (rainy) の日】
+    { name: '雨粒のしずく', description: '雨粒が固まってできたような、きれいなしずく。', rarity: 'uncommon', iconName: 'IoWaterOutline', weather: 'rainy' },
+    { name: '虹のかけら', description: '雨上がりの空から落ちてきた虹の一部。', rarity: 'epic', iconName: 'GiRainbowStar', weather: 'rainy' }, // 雨の日限定に変更
+
+    // 【くもり (cloudy) の日】
+    { name: '曇りガラス', description: 'すりガラスのような、向こうがぼんやり見えるかけら。', rarity: 'normal', iconName: 'BsSquareHalf', weather: 'cloudy' },
+    { name: '霧吹き草', description: '霧のような細かい水滴をつけた草。', rarity: 'uncommon', iconName: 'GiGrass', weather: 'cloudy' },
+
+    // 【雪 (snowy) の日】
+    { name: '小さな雪うさぎ', description: '誰かが作ったのかな？手のひらサイズの雪うさぎ。', rarity: 'uncommon', iconName: 'FaSnowflake', weather: 'snowy' }, // アイコン候補変更
+    { name: '氷の欠片', description: 'キラキラと光る、氷の小さなかけら。', rarity: 'normal', iconName: 'FaRegSnowflake', weather: 'snowy' },
+    { name: 'つららドロップ', description: 'つららの先から落ちた、氷のしずく。', rarity: 'rare', iconName: 'GiIceCube', weather: 'snowy' },
+
+    // 【雷雨 (thunderstorm) の日】
+    { name: 'バリバリの実', description: '雷の日にだけなる、食べるとパチパチする不思議な実。', rarity: 'epic', iconName: 'GiElectric', weather: 'thunderstorm' },
+    { name: 'お天気お守り', description: '嵐から守ってくれるかもしれない、古びたお守り。', rarity: 'rare', iconName: 'GiPaperLantern', weather: 'thunderstorm' },
+
+    // 【強風 (windy) の日】
+    { name: '風の音', description: '風の音が閉じ込められたような、不思議な貝殻。', rarity: 'uncommon', iconName: 'GiSpiralShell', weather: 'windy' },
+    { name: '飛ばされた帽子', description: '風で飛ばされてきた、誰かの小さな帽子。', rarity: 'normal', iconName: 'FaHatCowboy', weather: 'windy' },
+
+    // 【夜 (night) の日】
+    { name: '月のしずく', description: '月の光が集まってできたような、優しい光の玉。', rarity: 'epic', iconName: 'BsMoonStarsFill', weather: 'night' },
+    { name: '真夜中の花', description: '夜にだけそっと咲く、珍しい花。', rarity: 'rare', iconName: 'GiNightSky', weather: 'night' }, // アイコン候補変更
+    { name: '眠りの砂', description: '持っていると少し眠たくなる、キラキラした砂。', rarity: 'uncommon', iconName: 'GiSandDust', weather: 'night' },
+    // --- ▲▲▲ 追加ここまで ▲▲▲ ---
 ];
 
 async function main() {
     console.log('Seeding started...');
     // 既存のアイテムを削除する前に、関連する UserInventory レコードを削除
-    await prisma.userInventory.deleteMany(); // ← 外部キー制約エラーを防ぐため
+    await prisma.userInventory.deleteMany();
     console.log('Deleted existing user inventories.');
     await prisma.item.deleteMany();
     console.log('Deleted existing items.');
     for (const item of initialItems) {
-        await prisma.item.create({ data: item });
+        // 同じ名前のアイテムが既にないか確認（念のため）
+        const existing = await prisma.item.findUnique({ where: { name: item.name } });
+        if (!existing) {
+            await prisma.item.create({ data: item });
+        } else {
+            console.log(`Skipping duplicate item: ${item.name}`);
+        }
     }
     console.log('Seeding finished.');
 }
