@@ -234,12 +234,28 @@ export default function TenChanHomeClient({ initialData }) { // initialData は 
                             {error}
                         </p>
                     )}
-                    <CharacterDisplay
-                        petName={petName}
-                        mood={isLoading ? "neutral" : error ? "sad" : "happy"}
-                        message={message}
-                        onCharacterClick={handleCharacterClick}
-                    />
+
+                    {/* --- ↓↓↓ ローディング中の表示を変更 ↓↓↓ --- */}
+                    {isLoading ? (
+                        <div className="flex-grow flex flex-col items-center justify-center gap-y-4 p-3 text-center pb-20">
+                            <div className="w-40 h-40 flex items-center justify-center">
+                                {/* ローディング中は顔を表示しない */}
+                            </div>
+                            <div>
+                                {/* テキストを変更 */}
+                                <h1 className="text-xl font-medium text-slate-500 animate-pulse">てんちゃん じゅんびちゅう...</h1>
+                            </div>
+                        </div>
+                    ) : (
+                        <CharacterDisplay
+                            petName={petName}
+                            mood={error ? "sad" : "happy"}
+                            message={message}
+                            onCharacterClick={handleCharacterClick}
+                        />
+                    )}
+                    {/* --- ↑↑↑ ローディング中の表示を変更 ↑↑↑ --- */}
+
                     <Footer onWalkClick={() => setIsModalOpen(true)} />
                 </div>
             </main>
