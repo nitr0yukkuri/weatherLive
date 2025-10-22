@@ -60,7 +60,7 @@ const mapWeatherType = (weatherData: any): WeatherType => {
     if (main.includes("rain")) return "rainy";
     if (main.includes("snow")) return "snowy";
     if (main.includes("clear")) return "clear";
-    if (main.includes("clouds")) return "cloudy";
+    if (main.includes("clouds")) return "cloudy"; // clouds は cloudy に変更
     return "sunny";
 };
 
@@ -165,16 +165,16 @@ export default function TenChanHomeClient({ initialData }) { // initialData は 
                 },
                 (geoError) => {
                     console.error("Geolocation Error:", geoError);
-                    let errorMessage = "位置情報の取得に失敗しました。";
+                    let errorMessage = "あれれ、いまどこにいるか分かんなくなっちゃった…";
                     if (geoError.code === geoError.PERMISSION_DENIED) {
-                        errorMessage = "位置情報の利用が許可されていません。";
+                        errorMessage = "いまどこにいるか、教えてほしいな！\n（ブラウザの設定を確認してみてね）";
                     } else if (geoError.code === geoError.POSITION_UNAVAILABLE) {
-                        errorMessage = "現在位置を取得できませんでした。";
+                        errorMessage = "うーん、いまいる場所がうまく掴めないみたい…";
                     } else if (geoError.code === geoError.TIMEOUT) {
-                        errorMessage = "位置情報の取得がタイムアウトしました。";
+                        errorMessage = "場所を探すのに時間がかかっちゃった…\nもう一回試してみて！";
                     }
                     setError(errorMessage);
-                    setLocation("取得不可");
+                    setLocation("？？？");
                     setWeather(null);
                     setTemperature(null);
                     setIsLoading(false);
@@ -182,8 +182,8 @@ export default function TenChanHomeClient({ initialData }) { // initialData は 
                 { timeout: 10000 }
             );
         } else {
-            setError("このブラウザでは位置情報機能が利用できません。");
-            setLocation("利用不可");
+            setError("ごめんね、このアプリだと\nいまどこにいるかの機能が使えないみたい…");
+            setLocation("？？？");
             setWeather(null);
             setTemperature(null);
             setIsLoading(false);
@@ -195,7 +195,7 @@ export default function TenChanHomeClient({ initialData }) { // initialData は 
             clearInterval(timer);
             if (messageTimeoutRef.current) clearTimeout(messageTimeoutRef.current);
         };
-    }, []); // initialData は不要なので削除
+    }, []); // 空の依存配列
 
     const handleConfirmWalk = () => {
         setIsModalOpen(false);
@@ -226,11 +226,11 @@ export default function TenChanHomeClient({ initialData }) { // initialData は 
                         isClient={isClient}
                         currentTime={currentTime}
                         temperature={temperature}
-                        location={isLoading ? "取得中..." : location}
+                        location={isLoading ? "取得中..." : (error ? "？？？" : location)}
                         onCycleWeather={cycleWeather}
                     />
                     {error && (
-                        <p className="text-center text-sm text-red-600 bg-red-100 p-2 mx-4 rounded -mt-4 mb-2 shadow-sm">
+                        <p className="text-center text-sm text-red-600 bg-red-100 p-2 mx-4 rounded -mt-4 mb-2 shadow-sm whitespace-pre-line">
                             {error}
                         </p>
                     )}
