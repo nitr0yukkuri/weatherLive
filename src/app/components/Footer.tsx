@@ -1,10 +1,11 @@
-// nitr0yukkuri/weatherlive/weatherLive-b3045c8544f8e00c4dffca0c24f4db06f823d485/src/app/components/Footer.tsx
+// src/app/components/Footer.tsx
 
 'use client';
 
 import { useState } from 'react';
-import NavItem from './NavItem'; // ← NavItemはここから読み込む
-import { BsCloud, BsCollectionFill } from 'react-icons/bs';
+import NavItem from './NavItem'; // NavItemコンポーネントをインポート
+// BsBook アイコンを追加でインポート
+import { BsCloud, BsCollectionFill, BsBook } from 'react-icons/bs';
 import { MdDirectionsWalk } from 'react-icons/md';
 import { IoSettingsSharp } from 'react-icons/io5';
 import { FaSeedling } from 'react-icons/fa';
@@ -12,14 +13,13 @@ import { useRouter } from 'next/navigation';
 
 export default function Footer({ onWalkClick }: { onWalkClick?: () => void }) {
     const router = useRouter();
-    // 初期状態をホームページに合わせるため、空にしておくのがおすすめです
     const [activePage, setActivePage] = useState('');
 
     const navItems = [
         { name: '天気予報', href: '/weather', icon: <BsCloud size={28} /> },
         { name: 'おさんぽ', href: undefined, icon: <MdDirectionsWalk size={28} />, onClick: onWalkClick },
-        { name: 'ずかん', href: '/collection', icon: <BsCollectionFill size={28} /> },
-        // ★★★ 修正点: hrefを '/achievements' に変更 ★★★
+        // 「ずかん」のアイコンを BsBook に変更
+        { name: 'ずかん', href: '/collection', icon: <BsBook size={28} /> },
         { name: '実績', href: '/achievements', icon: <FaSeedling size={28} /> },
         { name: '設定', href: '#', icon: <IoSettingsSharp size={28} /> },
     ];
@@ -39,11 +39,12 @@ export default function Footer({ onWalkClick }: { onWalkClick?: () => void }) {
                 {navItems.map((item) => (
                     <NavItem
                         key={item.name}
-                        // ★★★ hrefを渡すように修正 ★★★
                         href={item.href}
                         icon={item.icon}
                         label={item.name}
                         isActive={activePage === item.name}
+                        // NavItem コンポーネント内で router.push が実行されるため、
+                        // ここでは onClick ハンドラは activePage の更新のみ（または onClick があればそれを実行）
                         onClick={item.onClick ? item.onClick : () => setActivePage(item.name)}
                     />
                 ))}
@@ -51,4 +52,3 @@ export default function Footer({ onWalkClick }: { onWalkClick?: () => void }) {
         </footer>
     );
 }
-// ★★★ このファイルにあった NavItem の定義は削除しました ★★★
