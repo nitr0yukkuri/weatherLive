@@ -1,15 +1,15 @@
 // src/app/api/progress/route.ts
-
 import { NextResponse } from 'next/server';
 import prisma from '../../lib/prisma';
+// import { getCurrentUser } from '@/app/lib/session'; // ★ 削除
 
-// ★★★ 修正点: dynamic export を追加 ★★★
 export const dynamic = 'force-dynamic';
 
-// ユーザーの進捗を取得するAPI
 export async function GET() {
+    // ★ ユーザー取得処理を削除
+
     try {
-        // ... (省略)
+        // ★ where, create から userId を削除し、id: 1 を使うように戻す
         const progress = await prisma.userProgress.upsert({
             where: { id: 1 },
             update: {},
@@ -19,6 +19,7 @@ export async function GET() {
         return NextResponse.json(progress);
     } catch (error) {
         console.error("Failed to fetch user progress:", error);
+        // ★ ログイン不要なので、デフォルト値を返す処理は削除
         return NextResponse.json({ message: '進捗情報の取得に失敗しました。' }, { status: 500 });
     }
 }

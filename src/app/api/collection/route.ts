@@ -1,16 +1,16 @@
 import { NextResponse } from 'next/server';
-// ★★★ パスを修正しました ('../' を '../..' に) ★★★
 import prisma from '../../lib/prisma';
+// import { getCurrentUser } from '@/app/lib/session'; // ★ 削除
 
-// === 最小限の変更: ここに追加 ===
 export const dynamic = 'force-dynamic';
-// === 変更ここまで ===
 
 export async function GET() {
+    // ★ ユーザー取得処理を削除
     try {
         const allItems = await prisma.item.findMany({
             orderBy: { id: 'asc' },
         });
+        // ★ 取得条件 (where) を削除し、全インベントリを取得
         const inventory = await prisma.userInventory.findMany();
         const collection = allItems.map(item => {
             const inventoryItem = inventory.find(inv => inv.itemId === item.id);
@@ -27,23 +27,33 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+    // ★ ユーザー取得処理を削除
     try {
         const { itemId } = await request.json();
+        const numericItemId = Number(itemId); // ★念のためNumber型に変換
+
+        if (isNaN(numericItemId)) { // ★ 型チェックを追加
+            return NextResponse.json({ message: '無効なアイテムIDです。' }, { status: 400 });
+        }
         if (!itemId) {
             return NextResponse.json({ message: 'アイテムIDが必要です。' }, { status: 400 });
         }
+
+        // ★ where句を itemId のみに戻す
         const existingItem = await prisma.userInventory.findUnique({
-            where: { itemId: itemId },
+            where: { itemId: numericItemId },
         });
+
         if (existingItem) {
             await prisma.userInventory.update({
-                where: { itemId: itemId },
+                where: { itemId: numericItemId }, // ★ where句を itemId のみに戻す
                 data: { quantity: { increment: 1 } },
             });
         } else {
             await prisma.userInventory.create({
                 data: {
-                    itemId: itemId,
+                    // ★ userId を削除
+                    itemId: numericItemId,
                     quantity: 1,
                 },
             });
@@ -51,12 +61,6 @@ export async function POST(request: Request) {
         return NextResponse.json({ message: 'コレクションを更新しました。' });
     } catch (error) {
         console.error("Failed to update collection:", error);
-        // 画像のエラーメッセージを見ると、findUnique や update の where句で
-        // { itemId: itemId } を渡している箇所で型エラーが出ているようです。
-        // schema.prisma で UserInventory の itemId が @unique であることは確認済み。
-        // Prisma Client の型定義と実際のスキーマがずれている可能性も考えられます。
-        // `npx prisma generate` を実行してクライアントを再生成すると解決するかもしれません。
-        // もし解決しない場合、エラーメッセージの詳細が必要です。
         return NextResponse.json({ message: 'コレクションの更新に失敗しました。' }, { status: 500 });
     }
 }

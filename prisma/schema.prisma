@@ -1,16 +1,13 @@
-// nitr0yukkuri/weatherlive/weatherLive-b3045c8544f8e00c4dffca0c24f4db06f823d485/prisma/schema.prisma
+// prisma/schema.prisma
 
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// --- 変更ここから ---
+datasource db {
+  provider = "postgresql"
+  url      = env("PRISMA_DATABASE_URL")
+}
 
 generator client {
   provider = "prisma-client-js"
-}
-
-datasource db {
-  provider = "postgresql"
-  // ★★★ 修正箇所: DATABASE_URL から PRISMA_DATABASE_URL に変更 ★★★
-  url      = env("PRISMA_DATABASE_URL")
 }
 
 // アイテムのマスターデータ
@@ -21,19 +18,24 @@ model Item {
   rarity      String          @default("normal")
   iconName    String?
   weather     String?
-  inventories UserInventory[] // 連携を追加
+  stage       String?         // これは残しても影響ないかもしれません
+  inventories UserInventory[]
 }
 
-// ユーザーの実績進捗を記録するテーブル
+// ユーザーの実績進捗 (元の単一ユーザー形式に戻す)
 model UserProgress {
-  id        Int @id @default(1) // ユーザーが一人を想定し、常にID: 1
-  walkCount Int @default(0)    // おさんぽ回数
+  id        Int @id @default(1) // ★ id: 1 で固定
+  walkCount Int @default(0)
 }
 
-// 手に入れたアイテムを記録するテーブル
+// ユーザーのアイテム所持状況 (元の単一ユーザー形式に戻す)
 model UserInventory {
   id       Int  @id @default(autoincrement())
-  itemId   Int  @unique      // アイテムID
-  quantity Int  @default(0)  // 所持数
+  itemId   Int  @unique // ★ itemId を unique に戻す
+  quantity Int  @default(0)
   item     Item @relation(fields: [itemId], references: [id])
+  // ★ userId と user リレーションを削除
 }
+
+// ★ User, Account, Session, VerificationToken モデルを削除
+// --- 変更ここまで ---

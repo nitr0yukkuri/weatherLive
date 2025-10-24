@@ -1,15 +1,13 @@
-// nitr0yukkuri/weatherlive/weatherLive-b3045c8544f8e00c4dffca0c24f4db06f823d485/src/app/layout.tsx
-
+// src/app/layout.tsx
 import type { Metadata } from "next";
-// M PLUS Rounded 1c フォントをインポート
 import { M_PLUS_Rounded_1c } from "next/font/google";
 import "./globals.css";
+// import SessionProviderWrapper from './components/SessionProviderWrapper'; // ★ 削除
 
-// フォントの設定
 const rounded_mplus = M_PLUS_Rounded_1c({
     subsets: ["latin"],
-    weight: ["400", "500", "800"], // 必要な太さを指定
-    display: 'swap', // ビルドエラーを防ぐための設定
+    weight: ["400", "500", "800"],
+    display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -24,11 +22,9 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="ja">
-            {/* bodyタグにフォントのクラスを適用 */}
             <body className={rounded_mplus.className}>
-                {/* Tailwinad CSSにクラスを認識させるためのおまじない */}
+                {/* ★ SessionProviderWrapper のラップを解除 */}
                 <div className="hidden bg-sunny bg-cloudy bg-rainy bg-snowy bg-night bg-green-100"></div>
-
                 {children}
             </body>
         </html>

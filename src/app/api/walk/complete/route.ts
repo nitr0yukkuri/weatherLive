@@ -1,15 +1,15 @@
 // src/app/api/walk/complete/route.ts
-
 import { NextResponse } from 'next/server';
 import prisma from '../../../lib/prisma';
+// import { getCurrentUser } from '@/app/lib/session'; // ★ 削除
 
-// ★★★ 修正点: dynamic export を追加 ★★★
 export const dynamic = 'force-dynamic';
 
-// おさんぽ完了時に進捗を更新するAPI
 export async function POST() {
+    // ★ ユーザー取得処理を削除
+
     try {
-        // ... (省略)
+        // ★ where, create から userId を削除し、id: 1 を使うように戻す
         const progress = await prisma.userProgress.upsert({
             where: { id: 1 },
             update: {
