@@ -18,14 +18,41 @@ model Item {
   rarity      String          @default("normal")
   iconName    String?
   weather     String?
-  stage       String?         // これは残しても影響ないかもしれません
+  stage       String?
   inventories UserInventory[]
 }
 
 // ユーザーの実績進捗 (元の単一ユーザー形式に戻す)
 model UserProgress {
   id        Int @id @default(1) // ★ id: 1 で固定
-  walkCount Int @default(0)
+  walkCount Int @default(0) // 既存: 総おさんぽ回数
+
+  // --- ▼▼▼ ここから追加 ▼▼▼ ---
+  // 天気別おさんぽ回数
+  sunnyWalkCount         Int @default(0)
+  clearWalkCount         Int @default(0)
+  rainyWalkCount         Int @default(0)
+  cloudyWalkCount        Int @default(0)
+  snowyWalkCount         Int @default(0)
+  thunderstormWalkCount  Int @default(0)
+  windyWalkCount         Int @default(0)
+  nightWalkCount         Int @default(0)
+
+  // アイテム収集関連 (種類数)
+  collectedItemTypesCount       Int @default(0) // 集めたアイテムの種類数
+  collectedNormalItemTypesCount   Int @default(0)
+  collectedUncommonItemTypesCount Int @default(0)
+  collectedRareItemTypesCount     Int @default(0)
+  collectedEpicItemTypesCount     Int @default(0)
+  collectedLegendaryItemTypesCount Int @default(0)
+
+  // アイテム収集関連 (総数) - 必要であれば追加
+  // collectedTotalItemCount Int @default(0) // 集めたアイテムの総数
+
+  // 連続おさんぽ記録
+  consecutiveWalkDays Int      @default(0)
+  lastWalkDate        DateTime? // 最後におさんぽした日時
+  // --- ▲▲▲ 追加ここまで ▲▲▲ ---
 }
 
 // ユーザーのアイテム所持状況 (元の単一ユーザー形式に戻す)
@@ -34,8 +61,7 @@ model UserInventory {
   itemId   Int  @unique // ★ itemId を unique に戻す
   quantity Int  @default(0)
   item     Item @relation(fields: [itemId], references: [id])
-  // ★ userId と user リレーションを削除
 }
 
-// ★ User, Account, Session, VerificationToken モデルを削除
+// ★ User, Account, Session, VerificationToken モデルは削除済み
 // --- 変更ここまで ---
