@@ -14,7 +14,7 @@ const rounded_mplus = M_PLUS_Rounded_1c({
 export const metadata: Metadata = {
     title: "おてんきぐらし", // タイトルも変更しておくと良いでしょう
     description: "あなたの「今」とつながる、新しい癒やしの体験。", // 説明も変更
-    // --- ▼▼▼ ファビコン設定を追加 ▼▼▼ ---
+    // --- ▼▼▼ ファビコン設定を追 ▼▼▼ ---
     icons: {
         icon: '/icon.png', // /public/icon.png を参照 (推奨)
         shortcut: '/favicon.ico', // /public/favicon.ico を参照
