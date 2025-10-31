@@ -9,6 +9,26 @@ import Footer from '../components/Footer';
 // ★ 1. ItemDetailModalをインポート
 import ItemDetailModal from '../components/ItemDetailModal';
 
+// --- ▼▼▼ 背景ここから ▼▼▼ ---
+type WeatherType = "sunny" | "clear" | "rainy" | "cloudy" | "snowy" | "thunderstorm" | "windy" | "night";
+const CURRENT_WEATHER_KEY = 'currentWeather'; // localStorage キー
+
+const getBackgroundGradientClass = (weather: WeatherType | null): string => {
+    switch (weather) {
+        case 'clear': return 'bg-clear';
+        case 'cloudy': return 'bg-cloudy';
+        case 'rainy': return 'bg-rainy';
+        case 'thunderstorm': return 'bg-thunderstorm';
+        case 'snowy': return 'bg-snowy';
+        case 'windy': return 'bg-windy';
+        case 'night': return 'bg-night';
+        case 'sunny':
+        default: return 'bg-sunny'; // null の場合も sunny (初期表示など)
+    }
+};
+// --- ▲▲▲ 背景ここまで ▲▲▲ ---
+
+
 // ★ 2. CollectionItemの型定義に rarity と weather を追加
 interface CollectionItem {
     id: number;
@@ -21,11 +41,19 @@ interface CollectionItem {
 }
 
 export default function CollectionPage() {
+    // ★ 背景色のための State
+    const [dynamicBackgroundClass, setDynamicBackgroundClass] = useState('bg-sunny');
     const [collection, setCollection] = useState<CollectionItem[]>([]);
     const [loading, setLoading] = useState(true);
     // ★ 3. 選択されたアイテムとモーダルの状態を追加
     const [selectedItem, setSelectedItem] = useState<CollectionItem | null>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+
+    // ★ 背景色を localStorage から読み込む useEffect
+    useEffect(() => {
+        const storedWeather = localStorage.getItem(CURRENT_WEATHER_KEY) as WeatherType | null;
+        setDynamicBackgroundClass(getBackgroundGradientClass(storedWeather));
+    }, []);
 
     useEffect(() => {
         const fetchCollection = async () => {
@@ -61,13 +89,15 @@ export default function CollectionPage() {
                 item={selectedItem}
             />
 
-            <main className="w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col bg-orange-100 text-slate-700">
+            {/* ★★★ main タグの className を変更 ★★★ */}
+            <main className={`w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col text-slate-700 ${dynamicBackgroundClass}`}>
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-black/80 rounded-b-xl z-10"></div>
 
                 <div className="flex-grow overflow-y-auto p-6">
                     <header className="mb-8">
                         <Link href="/" className="text-slate-500 mb-6 inline-block text-sm hover:text-slate-700 transition-colors">← もどる</Link>
-                        <h1 className="text-4xl font-extrabold text-slate-800 tracking-wider">ずかん</h1>
+                        {/* ★★★ h1 タグの className を変更 (視認性UP) ★★★ */}
+                        <h1 className="text-4xl font-extrabold text-slate-800 tracking-wider backdrop-blur-sm bg-white/30 rounded-lg px-4 py-1">ずかん</h1>
                         <p className="text-slate-500 mt-1">集めたアイテムを見てみよう</p>
                     </header>
 

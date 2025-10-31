@@ -15,6 +15,7 @@ type TimeOfDay = "morning" | "afternoon" | "evening" | "night";
 
 // --- ★ localStorage キー ---
 const PET_NAME_STORAGE_KEY = 'otenki-gurashi-petName';
+const CURRENT_WEATHER_KEY = 'currentWeather'; // ★ 天気情報キーを追加
 
 // --- ★ ヘルパー関数 (コンポーネントの外に定義) ---
 const conversationMessages = {
@@ -109,7 +110,9 @@ export default function TenChanHomeClient({ initialData }) { // initialData は 
             const weathers: WeatherType[] = ["sunny", "clear", "cloudy", "rainy", "thunderstorm", "snowy", "windy", "night"];
             // prev が null の場合の考慮を追加
             const currentIndex = prev ? weathers.indexOf(prev) : -1;
-            return weathers[(currentIndex + 1) % weathers.length];
+            const nextWeather = weathers[(currentIndex + 1) % weathers.length];
+            localStorage.setItem(CURRENT_WEATHER_KEY, nextWeather); // ★ デバッグ時も保存
+            return nextWeather;
         });
     };
 
@@ -142,9 +145,11 @@ export default function TenChanHomeClient({ initialData }) { // initialData は 
                         throw new Error('天気データの形式が正しくありません。');
                     }
                     const currentWeather = data.list[0];
+                    const newWeather = mapWeatherType(currentWeather); // ★ 変数に格納
                     setLocation(data.city?.name || "不明な場所"); // Optional chaining
                     setTemperature(Math.round(currentWeather.main.temp));
-                    setWeather(mapWeatherType(currentWeather));
+                    setWeather(newWeather);
+                    localStorage.setItem(CURRENT_WEATHER_KEY, newWeather); // ★ localStorage に保存
                 })
                 .catch(err => {
                     console.error("Failed to fetch weather on client:", err);
@@ -152,6 +157,7 @@ export default function TenChanHomeClient({ initialData }) { // initialData は 
                     setLocation("取得失敗");
                     setWeather(null);
                     setTemperature(null);
+                    localStorage.setItem(CURRENT_WEATHER_KEY, 'sunny'); // ★ エラー時は sunny にフォールバック
                 })
                 .finally(() => {
                     setIsLoading(false);
@@ -177,6 +183,7 @@ export default function TenChanHomeClient({ initialData }) { // initialData は 
                     setLocation("？？？");
                     setWeather(null);
                     setTemperature(null);
+                    localStorage.setItem(CURRENT_WEATHER_KEY, 'sunny'); // ★ エラー時は sunny にフォールバック
                     setIsLoading(false);
                 },
                 { timeout: 10000 }
@@ -186,6 +193,7 @@ export default function TenChanHomeClient({ initialData }) { // initialData は 
             setLocation("？？？");
             setWeather(null);
             setTemperature(null);
+            localStorage.setItem(CURRENT_WEATHER_KEY, 'sunny'); // ★ エラー時は sunny にフォールバック
             setIsLoading(false);
         }
 

@@ -7,9 +7,31 @@ import Footer from '../components/Footer';
 import { IoSettingsSharp } from 'react-icons/io5';
 import React, { useState, useEffect } from 'react'; // useEffect を追加
 
+// --- ▼▼▼ 背景ここから ▼▼▼ ---
+type WeatherType = "sunny" | "clear" | "rainy" | "cloudy" | "snowy" | "thunderstorm" | "windy" | "night";
+const CURRENT_WEATHER_KEY = 'currentWeather'; // localStorage キー
+
+const getBackgroundGradientClass = (weather: WeatherType | null): string => {
+    switch (weather) {
+        case 'clear': return 'bg-clear';
+        case 'cloudy': return 'bg-cloudy';
+        case 'rainy': return 'bg-rainy';
+        case 'thunderstorm': return 'bg-thunderstorm';
+        case 'snowy': return 'bg-snowy';
+        case 'windy': return 'bg-windy';
+        case 'night': return 'bg-night';
+        case 'sunny':
+        default: return 'bg-sunny'; // null の場合も sunny (初期表示など)
+    }
+};
+// --- ▲▲▲ 背景ここまで ▲▲▲ ---
+
 const PET_NAME_STORAGE_KEY = 'otenki-gurashi-petName'; // localStorageのキー
 
 export default function SettingsPage() {
+    // ★ 背景色のための State
+    const [dynamicBackgroundClass, setDynamicBackgroundClass] = useState('bg-sunny');
+
     const [volume, setVolume] = useState(70);
     const [soundEffectVolume, setSoundEffectVolume] = useState(50);
     // ペット名の状態
@@ -19,12 +41,17 @@ export default function SettingsPage() {
     // 編集中の一時的な名前
     const [editingName, setEditingName] = useState("");
 
-    // --- 追加: 初期表示時に localStorage から名前を読み込む ---
+    // --- 変更: 初期表示時に localStorage から名前と天気を読み込む ---
     useEffect(() => {
         const storedName = localStorage.getItem(PET_NAME_STORAGE_KEY);
         if (storedName) {
             setPetName(storedName);
         }
+
+        // ★ 背景色をセットする処理 (追加)
+        const storedWeather = localStorage.getItem(CURRENT_WEATHER_KEY) as WeatherType | null;
+        setDynamicBackgroundClass(getBackgroundGradientClass(storedWeather));
+
     }, []); // 空の依存配列で初回のみ実行
 
     const handleVolumeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -69,21 +96,23 @@ export default function SettingsPage() {
 
     return (
         <div className="w-full min-h-screen bg-gray-200 flex items-center justify-center p-4">
-            <main className="w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col bg-sky-100 text-slate-700">
+            {/* ★★★ main タグの className を変更 ★★★ */}
+            <main className={`w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col text-slate-700 ${dynamicBackgroundClass}`}>
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-black/80 rounded-b-xl z-10"></div>
 
                 <div className="flex-grow overflow-y-auto p-6">
                     <Link href="/" className="text-slate-500 mb-6 inline-block text-sm font-semibold hover:text-slate-700 transition-colors">← もどる</Link>
 
                     <header className="mb-8">
-                        <h1 className="text-4xl font-extrabold text-slate-800 tracking-wider flex items-center gap-2">
+                        {/* ★★★ h1 タグの className を変更 (視認性UP) ★★★ */}
+                        <h1 className="text-4xl font-extrabold text-slate-800 tracking-wider flex items-center gap-2 backdrop-blur-sm bg-white/30 rounded-lg px-4 py-1">
                             設定
                             <IoSettingsSharp size={28} className="text-slate-500" />
                         </h1>
                     </header>
 
-                    {/* --- ペットの名前セクション (編集機能追加) --- */}
-                    <section className="mb-8">
+                    {/* ★★★ ペットの名前セクション (視認性UP) ★★★ */}
+                    <section className="mb-8 bg-white/60 backdrop-blur-sm rounded-2xl p-4">
                         <h2 className="text-lg font-semibold text-slate-600 mb-3">ペットの名前</h2>
                         {isEditingName ? (
                             // --- 編集中の表示 ---
@@ -124,8 +153,8 @@ export default function SettingsPage() {
                         )}
                     </section>
 
-                    {/* 音量設定セクション (変更なし) */}
-                    <section>
+                    {/* ★★★ 音量設定セクション (視認性UP) ★★★ */}
+                    <section className="bg-white/60 backdrop-blur-sm rounded-2xl p-4">
                         <h2 className="text-lg font-semibold text-slate-600 mb-4">音量設定</h2>
                         <div className="space-y-6">
                             <div className="flex items-center gap-4 relative">

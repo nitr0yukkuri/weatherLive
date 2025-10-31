@@ -14,6 +14,26 @@ import { BsSunFill, BsCloudFill, BsFillCloudLightningRainFill } from 'react-icon
 import { GiSnail, GiAcorn, GiStoneBlock } from 'react-icons/gi';
 // --- ▲▲▲ アイコンここまで ▲▲▲ ---
 
+// --- ▼▼▼ 背景ここから ▼▼▼ ---
+type WeatherType = "sunny" | "clear" | "rainy" | "cloudy" | "snowy" | "thunderstorm" | "windy" | "night";
+const CURRENT_WEATHER_KEY = 'currentWeather'; // localStorage キー
+
+const getBackgroundGradientClass = (weather: WeatherType | null): string => {
+    switch (weather) {
+        case 'clear': return 'bg-clear';
+        case 'cloudy': return 'bg-cloudy';
+        case 'rainy': return 'bg-rainy';
+        case 'thunderstorm': return 'bg-thunderstorm';
+        case 'snowy': return 'bg-snowy';
+        case 'windy': return 'bg-windy';
+        case 'night': return 'bg-night';
+        case 'sunny':
+        default: return 'bg-sunny'; // null の場合も sunny (初期表示など)
+    }
+};
+// --- ▲▲▲ 背景ここまで ▲▲▲ ---
+
+
 // 実績の型定義 (変更なし)
 interface Achievement {
     id: number;
@@ -130,11 +150,20 @@ const calculateAchievements = (progress: UserProgress | null, achievements: Achi
 
 
 export default function AchievementsPage() {
+    // ★ 背景色のための State
+    const [dynamicBackgroundClass, setDynamicBackgroundClass] = useState('bg-sunny');
+
     // ★ UserProgress | null 型を受け付けるように変更
     const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
     const [achievements, setAchievements] = useState<(Achievement & { progress: number })[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null); // ★ エラー状態を追加
+
+    // ★ 背景色を localStorage から読み込む useEffect
+    useEffect(() => {
+        const storedWeather = localStorage.getItem(CURRENT_WEATHER_KEY) as WeatherType | null;
+        setDynamicBackgroundClass(getBackgroundGradientClass(storedWeather));
+    }, []);
 
     useEffect(() => {
         const fetchProgress = async () => {
@@ -233,13 +262,15 @@ export default function AchievementsPage() {
 
     return (
         <div className="w-full min-h-screen bg-gray-200 flex items-center justify-center p-4">
-            <main className="w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col bg-green-100 text-slate-700">
+            {/* ★★★ main タグの className を変更 ★★★ */}
+            <main className={`w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col text-slate-700 ${dynamicBackgroundClass}`}>
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-black/80 rounded-b-xl z-10"></div>
 
                 <div className="flex-grow overflow-y-auto p-6">
                     <header className="mb-8">
                         <Link href="/" className="text-slate-500 mb-6 inline-block text-sm hover:text-slate-700 transition-colors">← もどる</Link>
-                        <h1 className="text-4xl font-extrabold text-slate-800 tracking-wider flex items-center gap-2">
+                        {/* ★★★ h1 タグの className を変更 (視認性UP) ★★★ */}
+                        <h1 className="text-4xl font-extrabold text-slate-800 tracking-wider flex items-center gap-2 backdrop-blur-sm bg-white/30 rounded-lg px-4 py-1">
                             実績
                             {/* ★ アイコンを FaTrophy に変更 */}
                             <FaTrophy size={28} className="text-slate-500" />
