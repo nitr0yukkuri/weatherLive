@@ -15,7 +15,7 @@ type TimeOfDay = "morning" | "afternoon" | "evening" | "night";
 
 // --- ★ localStorage キー ---
 const PET_NAME_STORAGE_KEY = 'otenki-gurashi-petName';
-const CURRENT_WEATHER_KEY = 'currentWeather'; // ★ 天気情報キーを追加
+const CURRENT_WEATHER_KEY = 'currentWeather';
 
 // --- ★ ヘルパー関数 (コンポーネントの外に定義) ---
 const conversationMessages = {
@@ -44,6 +44,7 @@ const getBackgroundGradientClass = (weather: WeatherType | null): string => {
     }
 };
 
+// ★★★ ここを修正しました（判定の順序を変更） ★★★
 const mapWeatherType = (weatherData: any): WeatherType => {
     // weatherData や weatherData.weather が存在しない場合のガードを追加
     if (!weatherData || !weatherData.weather || weatherData.weather.length === 0) {
@@ -55,15 +56,23 @@ const mapWeatherType = (weatherData: any): WeatherType => {
     const hour = new Date().getHours();
     const isNight = hour < 5 || hour >= 19;
 
-    if (isNight) return "night";
-    if (windSpeed !== undefined && windSpeed >= 10) return "windy"; // windSpeed の存在確認
+    // ★ 1. まず重要な天候（風、雷、雨、雪）を先に判定
+    if (windSpeed !== undefined && windSpeed >= 10) return "windy";
     if (main.includes("thunderstorm")) return "thunderstorm";
     if (main.includes("rain")) return "rainy";
     if (main.includes("snow")) return "snowy";
-    if (main.includes("clear")) return "clear";
-    if (main.includes("clouds")) return "cloudy"; // clouds は cloudy に変更
-    return "sunny";
+
+    // ★ 2. その他の天候（曇り、快晴）を判定
+    if (main.includes("clouds")) return "cloudy";
+    if (main.includes("clear")) {
+        // ★ 3. 快晴（clear）の時だけ、夜かどうかをチェック
+        return isNight ? "night" : "clear";
+    }
+
+    // ★ 4. デフォルト（sunnyなど）の場合も、夜かどうかをチェック
+    return isNight ? "night" : "sunny";
 };
+// ★★★ 修正ここまで ★★★
 
 const getTimeOfDay = (date: Date): TimeOfDay => {
     const hour = date.getHours();
@@ -93,6 +102,16 @@ export default function TenChanHomeClient({ initialData }) { // initialData は 
     // getTimeOfDay は外で定義したので、ここでは呼び出すだけ
     const timeOfDay = getTimeOfDay(currentTime);
 
+    // 天気設定とイベント発火をまとめた関数
+    const setWeatherAndNotify = (newWeather: WeatherType | null) => {
+        const weatherValue = newWeather || 'sunny'; // nullの場合は'sunny'として扱う
+        setWeather(weatherValue);
+        localStorage.setItem(CURRENT_WEATHER_KEY, weatherValue);
+
+        // フッターに変更を通知するためのカスタムイベント
+        window.dispatchEvent(new CustomEvent('weatherChanged'));
+    };
+
     const handleCharacterClick = () => {
         if (messageTimeoutRef.current) { clearTimeout(messageTimeoutRef.current); }
         const isNight = timeOfDay === 'night';
@@ -108,10 +127,12 @@ export default function TenChanHomeClient({ initialData }) { // initialData は 
     const cycleWeather = () => { // デバッグ用
         setWeather(prev => {
             const weathers: WeatherType[] = ["sunny", "clear", "cloudy", "rainy", "thunderstorm", "snowy", "windy", "night"];
-            // prev が null の場合の考慮を追加
             const currentIndex = prev ? weathers.indexOf(prev) : -1;
             const nextWeather = weathers[(currentIndex + 1) % weathers.length];
-            localStorage.setItem(CURRENT_WEATHER_KEY, nextWeather); // ★ デバッグ時も保存
+
+            // localStorageへの保存とイベント発火を関数経由で行う
+            setWeatherAndNotify(nextWeather);
+
             return nextWeather;
         });
     };
@@ -148,16 +169,18 @@ export default function TenChanHomeClient({ initialData }) { // initialData は 
                     const newWeather = mapWeatherType(currentWeather); // ★ 変数に格納
                     setLocation(data.city?.name || "不明な場所"); // Optional chaining
                     setTemperature(Math.round(currentWeather.main.temp));
-                    setWeather(newWeather);
-                    localStorage.setItem(CURRENT_WEATHER_KEY, newWeather); // ★ localStorage に保存
+
+                    // 天気設定を共通関数経由で行う
+                    setWeatherAndNotify(newWeather);
                 })
                 .catch(err => {
                     console.error("Failed to fetch weather on client:", err);
                     setError(err.message || "お天気情報の取得に失敗しました。");
                     setLocation("取得失敗");
-                    setWeather(null);
                     setTemperature(null);
-                    localStorage.setItem(CURRENT_WEATHER_KEY, 'sunny'); // ★ エラー時は sunny にフォールバック
+
+                    // エラー時も共通関数経由で設定
+                    setWeatherAndNotify(null); // nullは 'sunny' として処理される
                 })
                 .finally(() => {
                     setIsLoading(false);
@@ -181,9 +204,10 @@ export default function TenChanHomeClient({ initialData }) { // initialData は 
                     }
                     setError(errorMessage);
                     setLocation("？？？");
-                    setWeather(null);
                     setTemperature(null);
-                    localStorage.setItem(CURRENT_WEATHER_KEY, 'sunny'); // ★ エラー時は sunny にフォールバック
+
+                    // エラー時も共通関数経由で設定
+                    setWeatherAndNotify(null);
                     setIsLoading(false);
                 },
                 { timeout: 10000 }
@@ -191,9 +215,10 @@ export default function TenChanHomeClient({ initialData }) { // initialData は 
         } else {
             setError("ごめんね、このアプリだと\nいまどこにいるかの機能が使えないみたい…");
             setLocation("？？？");
-            setWeather(null);
             setTemperature(null);
-            localStorage.setItem(CURRENT_WEATHER_KEY, 'sunny'); // ★ エラー時は sunny にフォールバック
+
+            // エラー時も共通関数経由で設定
+            setWeatherAndNotify(null);
             setIsLoading(false);
         }
 
@@ -211,8 +236,7 @@ export default function TenChanHomeClient({ initialData }) { // initialData は 
         router.push(`/walk?weather=${walkWeather}`);
     };
 
-    const displayWeatherType = weather;
-    // getBackgroundGradientClass は外で定義したので、ここでは呼び出すだけ
+    const displayWeatherType = weather || 'sunny';
     const dynamicBackgroundClass = getBackgroundGradientClass(displayWeatherType);
 
     return (

@@ -2,24 +2,53 @@
 
 'use client';
 
-import { useState, useEffect } from 'react'; // ★ useEffect と useState をインポート
+import { useState, useEffect } from 'react';
 import NavItem from './NavItem';
 import { BsCloud, BsBook } from 'react-icons/bs';
 import { MdDirectionsWalk } from 'react-icons/md';
 import { IoSettingsSharp } from 'react-icons/io5';
 import { FaSeedling } from 'react-icons/fa';
 
-const CURRENT_WEATHER_KEY = 'currentWeather'; // ★ localStorage キー
+const CURRENT_WEATHER_KEY = 'currentWeather';
 
 export default function Footer({ onWalkClick }: { onWalkClick?: () => void }) {
-    // ★ 夜モードかどうかを判定する state を追加
     const [isNight, setIsNight] = useState(false);
 
-    // ★ クライアントサイドで localStorage から天気を読み込む
-    useEffect(() => {
+    // ★★★ 修正箇所1: localStorageを読み取る関数を定義 ★★★
+    const updateNightMode = () => {
         const storedWeather = localStorage.getItem(CURRENT_WEATHER_KEY);
         setIsNight(storedWeather === 'night');
-    }, []); // ページ読み込み時に一度だけ実行
+    };
+
+    useEffect(() => {
+        // ★ 1. ページ読み込み時にまず実行
+        updateNightMode();
+
+        // ★ 2. 'storage' イベント（localStorageが変更された時）を監視
+        const handleStorageChange = (event: StorageEvent) => {
+            // 他のタブでの変更を検知
+            if (event.key === CURRENT_WEATHER_KEY) {
+                updateNightMode();
+            }
+        };
+
+        // ★ 3. イベントリスナーを追加
+        window.addEventListener('storage', handleStorageChange);
+
+        // ★ 4. (おまけ) ホーム画面でのデバッグサイクルに対応するため、
+        // カスタムイベント 'weatherChanged' も監視
+        const handleWeatherChanged = () => {
+            updateNightMode();
+        };
+        window.addEventListener('weatherChanged', handleWeatherChanged);
+
+
+        // クリーンアップ関数
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            window.removeEventListener('weatherChanged', handleWeatherChanged);
+        };
+    }, []); // 依存配列は空のまま
 
     const navItems = [
         { name: '天気予報', href: '/weather', icon: <BsCloud size={28} /> },
@@ -29,10 +58,9 @@ export default function Footer({ onWalkClick }: { onWalkClick?: () => void }) {
         { name: '設定', href: '/settings', icon: <IoSettingsSharp size={28} /> },
     ];
 
-    // ★ 夜モードに応じてフッターの背景色を変更
     const footerBgClass = isNight
-        ? 'bg-gray-900/70' // 夜用の暗い背景
-        : 'bg-white/70';   // 昼用の明るい背景
+        ? 'bg-gray-900/70'
+        : 'bg-white/70';
 
     return (
         <footer className={`w-full ${footerBgClass} backdrop-blur-sm flex-shrink-0 transition-colors duration-300`}>
@@ -44,7 +72,7 @@ export default function Footer({ onWalkClick }: { onWalkClick?: () => void }) {
                         icon={item.icon}
                         label={item.name}
                         onClick={item.href ? undefined : item.onClick}
-                        isNight={isNight} // ★ NavItem に isNight 情報を渡す
+                        isNight={isNight}
                     />
                 ))}
             </nav>
