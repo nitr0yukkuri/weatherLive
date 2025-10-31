@@ -4,11 +4,15 @@
 
 import Link from 'next/link';
 
-// isActive プロパティを削除
-export default function NavItem({ icon, label, onClick, hasNotification = false, href }: { icon: React.ReactNode, label: string, onClick?: () => void, hasNotification?: boolean, href?: string }) {
-    // textColor のロジックを削除し、常に同じ色にする (例: text-slate-700)
-    // const textColor = isActive ? 'text-slate-600' : 'text-slate-800';
-    const textColor = 'text-slate-700'; // 固定の色に変更
+// ★ isNight prop を受け取るように変更
+export default function NavItem({ icon, label, onClick, hasNotification = false, href, isNight }: {
+    icon: React.ReactNode,
+    label: string,
+    onClick?: () => void,
+    hasNotification?: boolean,
+    href?: string,
+    isNight?: boolean // ★ isNight prop を追加
+}) {
 
     const handleClick = () => {
         if (onClick) {
@@ -16,9 +20,14 @@ export default function NavItem({ icon, label, onClick, hasNotification = false,
         }
     };
 
+    // ★ isNight に応じて色を動的に決定
+    const iconColor = isNight ? 'text-slate-200' : 'text-slate-800';
+    const labelColor = isNight ? 'text-slate-300' : 'text-slate-700';
+
     const content = (
         <>
-            <div className="relative">
+            {/* ★ アイコンの色を動的に適用 */}
+            <div className={`relative ${iconColor} transition-colors duration-300`}>
                 {icon}
                 {hasNotification && (
                     <div className="absolute -top-1 -right-1 flex">
@@ -27,16 +36,14 @@ export default function NavItem({ icon, label, onClick, hasNotification = false,
                     </div>
                 )}
             </div>
-            <span className="text-xs font-medium">{label}</span>
+            {/* ★ ラベルの色を動的に適用 */}
+            <span className={`text-xs font-medium ${labelColor} transition-colors duration-300`}>{label}</span>
         </>
     );
 
-    // className から textColor を削除 (固定色を使うため)
-    const className = `flex-1 flex flex-col items-center justify-center gap-1 transition-transform active:scale-95 h-full ${textColor} border-none outline-none`;
+    const className = `flex-1 flex flex-col items-center justify-center gap-1 transition-transform active:scale-95 h-full border-none outline-none`;
 
     return href ? (
-        // onClick ハンドラは Link 自体ではなく、内部の要素に適用するか、
-        // もしくは Link の onClick として渡す（ただし、主に状態更新用）
         <Link href={href} className={className} onClick={handleClick}>
             {content}
         </Link>

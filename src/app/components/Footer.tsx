@@ -2,47 +2,49 @@
 
 'use client';
 
-// useState は不要になったので削除
-// import { useState } from 'react';
-import NavItem from './NavItem'; // NavItemコンポーネントをインポート
-// 「ずかん」用の BsBook と「天気予報」用の BsCloud をインポート
+import { useState, useEffect } from 'react'; // ★ useEffect と useState をインポート
+import NavItem from './NavItem';
 import { BsCloud, BsBook } from 'react-icons/bs';
-// 「おさんぽ」用の MdDirectionsWalk をインポート
 import { MdDirectionsWalk } from 'react-icons/md';
-// 「設定」用の IoSettingsSharp をインポートして元に戻す
 import { IoSettingsSharp } from 'react-icons/io5';
-// 「実績」用の FaSeedling をインポート
 import { FaSeedling } from 'react-icons/fa';
-// useRouter は NavItem で Link を使うようになったので不要
-// import { useRouter } from 'next/navigation';
+
+const CURRENT_WEATHER_KEY = 'currentWeather'; // ★ localStorage キー
 
 export default function Footer({ onWalkClick }: { onWalkClick?: () => void }) {
-    // activePage の useState は削除
+    // ★ 夜モードかどうかを判定する state を追加
+    const [isNight, setIsNight] = useState(false);
+
+    // ★ クライアントサイドで localStorage から天気を読み込む
+    useEffect(() => {
+        const storedWeather = localStorage.getItem(CURRENT_WEATHER_KEY);
+        setIsNight(storedWeather === 'night');
+    }, []); // ページ読み込み時に一度だけ実行
 
     const navItems = [
         { name: '天気予報', href: '/weather', icon: <BsCloud size={28} /> },
-        // おさんぽボタンには onClick ハンドラを渡す
         { name: 'おさんぽ', href: undefined, icon: <MdDirectionsWalk size={28} />, onClick: onWalkClick },
         { name: 'ずかん', href: '/collection', icon: <BsBook size={28} /> },
         { name: '実績', href: '/achievements', icon: <FaSeedling size={28} /> },
-        // 設定アイコンを IoSettingsSharp に戻す
         { name: '設定', href: '/settings', icon: <IoSettingsSharp size={28} /> },
     ];
 
-    // handleNavClick 関数は不要になったので削除
+    // ★ 夜モードに応じてフッターの背景色を変更
+    const footerBgClass = isNight
+        ? 'bg-gray-900/70' // 夜用の暗い背景
+        : 'bg-white/70';   // 昼用の明るい背景
 
     return (
-        <footer className="w-full bg-white/20 backdrop-blur-sm flex-shrink-0">
+        <footer className={`w-full ${footerBgClass} backdrop-blur-sm flex-shrink-0 transition-colors duration-300`}>
             <nav className="flex items-center h-20">
                 {navItems.map((item) => (
                     <NavItem
                         key={item.name}
-                        href={item.href} // href を NavItem に渡す
+                        href={item.href}
                         icon={item.icon}
                         label={item.name}
-                        // isActive プロパティは削除
-                        // onClick は href がない場合 (おさんぽ) のみ渡す
                         onClick={item.href ? undefined : item.onClick}
+                        isNight={isNight} // ★ NavItem に isNight 情報を渡す
                     />
                 ))}
             </nav>
