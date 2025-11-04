@@ -27,7 +27,7 @@ const PET_SETTINGS_CHANGED_EVENT = 'petSettingsChanged'; // ★ 設定変更イ�
 const conversationMessages = {
     sunny: ["おひさまが気持ちいいね！", "こんな日はおさんぽしたくなるな〜", "あったかいね〜！", "ぽかぽかするね", "おせんたくびよりだ！", "まぶしいな〜！"],
     clear: ["雲ひとつないね！", "空がとっても青いよ！", "どこまでも見えそう！", "すがすがしい気分！", "飛行機雲が見えるかも？", "深呼吸したくなるね〜"],
-    cloudy: ["今日は過ごしやすいね！", "雲の形をずっと見ていられるなあ…", "おひさまはどこかな？", "雨、降るかな〜?", "雲がゆっくり動いてるよ", "日焼けの心配がなくていいね！"],
+    cloudy: ["今日は過ごしやすいね！", "雲の形をずっと見ていられるなあ…", "おひさまはどこかな？", "雨、降らないといいな〜", "雲がゆっくり動いてるよ", "日焼けの心配がなくていいね！"],
     rainy: ["雨の音が聞こえるね", "傘は持った？", "あめ、あめ、ふれ、ふれ♪", "かたつむりさん、いるかな？", "しっとりするね", "雨宿りしよっか！"],
     thunderstorm: ["ゴロゴロって音がする…！", "ちょっとだけこわいかも…", "おへそ隠さなきゃ！", "ひゃっ！光った！", "はやくおさまるといいね", "嵐が来てるみたい…！"],
     snowy: ["わー！雪だ！", "雪だるま、作れるかな？", "ふわふわしてるね", "まっしろだね！", "さむいけど、きれい！", "こんこんっ"],
@@ -324,11 +324,19 @@ export default function TenChanHomeClient({ initialData }) {
                 rarity={newItem?.rarity || null}
             />
 
-            <ConfirmationModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onConfirm={handleConfirmWalk}>
-                <p className="text-center text-xl font-bold leading-relaxed text-gray-800">
-                    おさんぽにでかけますか？
-                </p>
+            {/* ▼▼▼ 最小限の変更: children に新しいテキストを渡す ▼▼▼ */}
+            <ConfirmationModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onConfirm={handleConfirmWalk}
+                type="walk"
+            >
+                {/* h2 と whitespace-pre-line で改行を反映 */}
+                <h2 className="text-2xl font-bold text-gray-800 whitespace-pre-line">
+                    {"おさんぽは1日\n3回しかできません\n大丈夫ですか？"}
+                </h2>
             </ConfirmationModal>
+            {/* ▲▲▲ 変更ここまで ▲▲▲ */}
 
             <main
                 className={`w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col text-[#5D4037] ${dynamicBackgroundClass} transition-all duration-500`}
