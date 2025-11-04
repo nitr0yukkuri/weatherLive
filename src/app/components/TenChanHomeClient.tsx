@@ -154,7 +154,7 @@ export default function TenChanHomeClient({ initialData }) {
         // ★ 3. 他のタブでの変更も監視
         window.addEventListener('storage', handleSettingsChanged);
 
-        // --- (↓既存の天気取得ロジック↓) ---
+        // --- (↓既存の天気取得ロaジック↓) ---
         const fetchWeatherDataByLocation = (latitude: number, longitude: number) => {
             setError(null);
             fetch(`/api/weather/forecast?lat=${latitude}&lon=${longitude}`)
