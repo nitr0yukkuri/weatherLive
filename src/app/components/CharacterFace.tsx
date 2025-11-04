@@ -1,8 +1,15 @@
+// src/app/components/CharacterFace.tsx
+
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function CharacterFace({ mood = "happy", onClick }: { mood?: "happy" | "neutral" | "sad", onClick?: () => void }) {
+// ★ 変更点1: petColor を props に追加
+export default function CharacterFace({ mood = "happy", onClick, petColor = "white" }: {
+    mood?: "happy" | "neutral" | "sad",
+    onClick?: () => void,
+    petColor?: string // ★ 追加
+}) {
 
     const getMouthPath = () => {
         switch (mood) {
@@ -39,7 +46,9 @@ export default function CharacterFace({ mood = "happy", onClick }: { mood?: "hap
                     ease: "easeInOut"
                 }}
             >
-                <circle cx="60" cy="60" r="60" fill="white" />
+                {/* ★ 変更点2: fill="white" を fill={petColor} に変更 */}
+                <circle cx="60" cy="60" r="60" fill={petColor} />
+
                 <circle cx="20" cy="70" r="12" fill="#F8BBD0" />
                 <circle cx="100" cy="70" r="12" fill="#F8BBD0" />
                 <motion.g

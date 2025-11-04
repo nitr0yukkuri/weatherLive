@@ -15,6 +15,7 @@ type ObtainedItem = {
     id: number | null;
     name: string | null;
     iconName: string | null;
+    rarity: string | null; // ★ rarity を追加
 };
 
 // (mapWeatherType, getBackgroundColorClass, getWalkMessage は省略)
@@ -26,7 +27,7 @@ function WalkPageComponent() {
     const [location, setLocation] = useState('...');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [obtainedItem, setObtainedItem] = useState<ObtainedItem>({ id: null, name: null, iconName: null });
+    const [obtainedItem, setObtainedItem] = useState<ObtainedItem>({ id: null, name: null, iconName: null, rarity: null }); // ★ 初期値に rarity を追加
     const [isItemModalOpen, setIsItemModalOpen] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     // ★★★ 変更点1: 処理が開始されたかを記録する Ref を追加 ★★★
@@ -62,7 +63,7 @@ function WalkPageComponent() {
                     }
                     const item = itemResult; // 成功時はそのまま使う
 
-                    setObtainedItem({ id: item.id, name: item.name, iconName: item.iconName });
+                    setObtainedItem({ id: item.id, name: item.name, iconName: item.iconName, rarity: item.rarity }); // ★ rarity をセット
                     setIsItemModalOpen(true);
 
                     // 2. コレクションに記録
@@ -91,7 +92,7 @@ function WalkPageComponent() {
                     console.error("アイテム取得または記録処理中にエラー:", err);
                     setError(err.message || 'アイテム処理中にエラーが発生しました'); // エラーメッセージを設定
                     // エラー時でもモーダルは表示する（例: ふしぎな石）
-                    setObtainedItem({ id: null, name: 'ふしぎな石', iconName: 'IoHelpCircle' });
+                    setObtainedItem({ id: null, name: 'ふしぎな石', iconName: 'IoHelpCircle', rarity: 'normal' }); // ★ rarity をセット (normalで代用)
                     setIsItemModalOpen(true);
 
                     // エラー時もおさんぽ回数だけ記録を試みる (フォールバック)
@@ -200,7 +201,7 @@ function WalkPageComponent() {
     // (省略) return文は変更なし
     return (
         <div className="w-full min-h-screen bg-gray-200 flex items-center justify-center p-4">
-            <ItemGetModal isOpen={isItemModalOpen} onClose={handleModalClose} itemName={obtainedItem.name} iconName={obtainedItem.iconName} />
+            <ItemGetModal isOpen={isItemModalOpen} onClose={handleModalClose} itemName={obtainedItem.name} iconName={obtainedItem.iconName} rarity={obtainedItem.rarity} />
             <main className={`w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col text-slate-700 transition-colors duration-500 ${dynamicBackgroundClass}`}>
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-black/80 rounded-b-xl z-10"></div>
                 <div className="flex-grow flex flex-col p-6 items-center justify-between">

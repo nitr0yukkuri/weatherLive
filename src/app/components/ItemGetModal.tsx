@@ -12,9 +12,11 @@ type Props = {
     itemName: string | null;
     // ★ 2. iconNameを受け取れるようにPropsを追加します
     iconName: string | null;
+    // ★ 4. rarity を追加
+    rarity: string | null;
 };
 
-export default function ItemGetModal({ isOpen, onClose, itemName, iconName }: Props) {
+export default function ItemGetModal({ isOpen, onClose, itemName, iconName, rarity }: Props) {
     if (!itemName) return null;
 
     return (
@@ -37,7 +39,7 @@ export default function ItemGetModal({ isOpen, onClose, itemName, iconName }: Pr
                     >
                         {/* ★ 3. 固定のアイコンだった部分を、ItemIconコンポーネントに置き換えます */}
                         <div className="text-purple-500">
-                            <ItemIcon name={iconName} size={60} />
+                            <ItemIcon name={iconName} rarity={rarity ?? undefined} size={60} />
                         </div>
 
                         {/* メッセージ */}

@@ -28,18 +28,24 @@ type TimeOfDay = "morning" | "afternoon" | "evening" | "night";
 // ★ 2. ロジック関数をコンポーネントの外に移動
 // ===================================
 
+// ★★★ ここを修正 (clear を追加) ★★★
 const mapWeatherType = (weatherCode: string): string => {
     const code = weatherCode.toLowerCase();
     if (code.includes("rain")) return "rainy";
     if (code.includes("snow")) return "snowy";
     if (code.includes("clouds")) return "cloudy";
+    if (code.includes("clear")) return "clear"; // ← 追加
     return "sunny";
 };
+// ★★★ 修正ここまで ★★★
 
 const getWeatherText = (weatherType: string): string => {
     switch (weatherType) {
         case 'partlyCloudy': return '晴れ時々くもり';
         case 'cloudy': return 'くもり';
+        // ★★★ ここを修正 (clear を追加) ★★★
+        case 'clear': return '快晴';
+        // ★★★ 修正ここまで ★★★
         case 'sunny': return '晴れ';
         case 'rainy': return '雨';
         case 'snowy': return '雪';
@@ -63,6 +69,9 @@ const getBackgroundColorClass = (weatherType: string | undefined): string => {
     switch (weatherType) {
         case 'sunny':
         case 'night':
+        // ★★★ ここを修正 (clear を追加) ★★★
+        case 'clear':
+            // ★★★ 修正ここまで ★★★
             return 'bg-orange-200';
         case 'rainy':
             return 'bg-blue-200';
@@ -173,11 +182,15 @@ export default function WeatherPage() {
                     const date = new Date(dateStr);
                     const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][date.getDay()];
                     let dayLabel = index === 0 ? '今日' : index === 1 ? '明日' : `${date.getMonth() + 1}/${date.getDate()}`;
+
+                    // ★★★ ここを修正 (mapWeatherType が clear を返すように) ★★★
                     let weather = dailyData.weathers.some(w => w.toLowerCase().includes('rain')) ? 'rainy' : mapWeatherType(dailyData.weathers[0]);
 
-                    if (index === 0 && weather === 'sunny' && timeOfDay === 'night') {
+                    // ★★★ ここを修正 (clear の場合も night になるように) ★★★
+                    if (index === 0 && (weather === 'sunny' || weather === 'clear') && timeOfDay === 'night') {
                         weather = 'night';
                     }
+                    // ★★★ 修正ここまで ★★★
 
                     return {
                         day: dayLabel, date: dayOfWeek, weather: weather,

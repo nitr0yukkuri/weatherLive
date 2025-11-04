@@ -1,3 +1,5 @@
+// src/app/components/CharacterDisplay.tsx
+
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
@@ -5,12 +7,14 @@ import CharacterFace from './CharacterFace';
 
 type CharacterDisplayProps = {
     petName: string;
+    petColor: string; // ★ 変更点1: petColor を追加
     mood: "happy" | "neutral" | "sad";
     message: string | null;
     onCharacterClick: () => void;
 };
 
-export default function CharacterDisplay({ petName, mood, message, onCharacterClick }: CharacterDisplayProps) {
+// ★ 変更点2: props で petColor を受け取る
+export default function CharacterDisplay({ petName, petColor, mood, message, onCharacterClick }: CharacterDisplayProps) {
     return (
         <div className="flex-grow flex flex-col items-center justify-center gap-y-4 p-3 text-center pb-20 relative">
             <AnimatePresence>
@@ -28,14 +32,16 @@ export default function CharacterDisplay({ petName, mood, message, onCharacterCl
                 )}
             </AnimatePresence>
 
-            <div className="w-40 h-40 rounded-full bg-white p-2">
+            {/* ★ 変更点3: 背景色を petColor にする (p-2 は削除) */}
+            <div className="w-40 h-40 rounded-full" style={{ backgroundColor: petColor }}>
                 <div className="w-full h-full rounded-full flex items-center justify-center">
-                    <CharacterFace mood={mood} onClick={onCharacterClick} />
+                    {/* ★ 変更点4: CharacterFace に petColor を渡す */}
+                    <CharacterFace mood={mood} onClick={onCharacterClick} petColor={petColor} />
                 </div>
             </div>
 
             <div>
-                <h1 className="text-4xl font-bold backdrop-blur-sm bg-white/30 rounded-lg px-4 py-1 bg-red-500">{petName}</h1>
+                <h1 className="text-4xl font-bold backdrop-blur-sm bg-white/30 rounded-lg px-4 py-1">{petName}</h1>
             </div>
         </div>
     );

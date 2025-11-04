@@ -13,11 +13,14 @@ import ConfirmationModal from './ConfirmationModal';
 type WeatherType = "sunny" | "clear" | "rainy" | "cloudy" | "snowy" | "thunderstorm" | "windy" | "night";
 type TimeOfDay = "morning" | "afternoon" | "evening" | "night";
 
-// --- ★ localStorage キー ---
+// --- ▼▼▼ 変更点1: キー定義を修正 ▼▼▼ ---
 const PET_NAME_STORAGE_KEY = 'otenki-gurashi-petName';
+const PET_COLOR_STORAGE_KEY = 'otenki-gurashi-petColor'; // ★ 色のキー
 const CURRENT_WEATHER_KEY = 'currentWeather';
+const PET_SETTINGS_CHANGED_EVENT = 'petSettingsChanged'; // ★ 設定変更イベント
+// --- ▲▲▲ 変更点1ここまで ▲▲▲ ---
 
-// --- ★ ヘルパー関数 (コンポーネントの外に定義) ---
+// --- ★ ヘルパー関数 (変更なし) ---
 const conversationMessages = {
     sunny: ["おひさまが気持ちいいね！", "こんな日はおさんぽしたくなるな〜"],
     clear: ["雲ひとつないね！", "空がとっても青いよ！"],
@@ -40,39 +43,29 @@ const getBackgroundGradientClass = (weather: WeatherType | null): string => {
         case 'windy': return 'bg-windy';
         case 'night': return 'bg-night';
         case 'sunny':
-        default: return 'bg-sunny'; // null の場合も sunny (初期表示など)
+        default: return 'bg-sunny';
     }
 };
 
-// ★★★ ここを修正しました（判定の順序を変更） ★★★
 const mapWeatherType = (weatherData: any): WeatherType => {
-    // weatherData や weatherData.weather が存在しない場合のガードを追加
     if (!weatherData || !weatherData.weather || weatherData.weather.length === 0) {
-        return "sunny"; // 不明な場合は sunny を返す
+        return "sunny";
     }
-
     const main = weatherData.weather[0].main.toLowerCase();
-    const windSpeed = weatherData.wind?.speed; // wind が存在しない可能性も考慮
+    const windSpeed = weatherData.wind?.speed;
     const hour = new Date().getHours();
     const isNight = hour < 5 || hour >= 19;
 
-    // ★ 1. まず重要な天候（風、雷、雨、雪）を先に判定
     if (windSpeed !== undefined && windSpeed >= 10) return "windy";
     if (main.includes("thunderstorm")) return "thunderstorm";
     if (main.includes("rain")) return "rainy";
     if (main.includes("snow")) return "snowy";
-
-    // ★ 2. その他の天候（曇り、快晴）を判定
     if (main.includes("clouds")) return "cloudy";
     if (main.includes("clear")) {
-        // ★ 3. 快晴（clear）の時だけ、夜かどうかをチェック
         return isNight ? "night" : "clear";
     }
-
-    // ★ 4. デフォルト（sunnyなど）の場合も、夜かどうかをチェック
     return isNight ? "night" : "sunny";
 };
-// ★★★ 修正ここまで ★★★
 
 const getTimeOfDay = (date: Date): TimeOfDay => {
     const hour = date.getHours();
@@ -85,13 +78,16 @@ const getTimeOfDay = (date: Date): TimeOfDay => {
 
 
 // --- ★ メインコンポーネント ---
-export default function TenChanHomeClient({ initialData }) { // initialData は null 想定
+export default function TenChanHomeClient({ initialData }) {
     const router = useRouter();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [weather, setWeather] = useState<WeatherType | null>(null);
     const [currentTime, setCurrentTime] = useState(new Date());
     const [temperature, setTemperature] = useState<number | null>(null);
+    // --- ▼▼▼ 変更点2: 色の State を追加 ▼▼▼ ---
     const [petName, setPetName] = useState<string>("てんちゃん");
+    const [petColor, setPetColor] = useState<string>("white"); // ★ 色の State
+    // --- ▲▲▲ 変更点2ここまで ▲▲▲ ---
     const [location, setLocation] = useState<string | null>("場所を取得中...");
     const [isClient, setIsClient] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
@@ -99,16 +95,12 @@ export default function TenChanHomeClient({ initialData }) { // initialData は 
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // getTimeOfDay は外で定義したので、ここでは呼び出すだけ
     const timeOfDay = getTimeOfDay(currentTime);
 
-    // 天気設定とイベント発火をまとめた関数
     const setWeatherAndNotify = (newWeather: WeatherType | null) => {
-        const weatherValue = newWeather || 'sunny'; // nullの場合は'sunny'として扱う
+        const weatherValue = newWeather || 'sunny';
         setWeather(weatherValue);
         localStorage.setItem(CURRENT_WEATHER_KEY, weatherValue);
-
-        // フッターに変更を通知するためのカスタムイベント
         window.dispatchEvent(new CustomEvent('weatherChanged'));
     };
 
@@ -116,7 +108,6 @@ export default function TenChanHomeClient({ initialData }) { // initialData は 
         if (messageTimeoutRef.current) { clearTimeout(messageTimeoutRef.current); }
         const isNight = timeOfDay === 'night';
         let messageOptions = conversationMessages.default;
-        // weather が null でないことを確認
         if (isNight) { messageOptions = conversationMessages.night; }
         else if (weather && conversationMessages[weather]) { messageOptions = conversationMessages[weather]; }
         const randomMessage = messageOptions[Math.floor(Math.random() * messageOptions.length)];
@@ -129,48 +120,62 @@ export default function TenChanHomeClient({ initialData }) { // initialData は 
             const weathers: WeatherType[] = ["sunny", "clear", "cloudy", "rainy", "thunderstorm", "snowy", "windy", "night"];
             const currentIndex = prev ? weathers.indexOf(prev) : -1;
             const nextWeather = weathers[(currentIndex + 1) % weathers.length];
-
-            // localStorageへの保存とイベント発火を関数経由で行う
             setWeatherAndNotify(nextWeather);
-
             return nextWeather;
         });
     };
 
+    // --- ▼▼▼ 変更点3: 設定読み込み関数とイベントリスナーを追加 ▼▼▼ ---
     useEffect(() => {
         setIsClient(true);
         setError(null);
         setIsLoading(true);
 
-        const storedName = localStorage.getItem(PET_NAME_STORAGE_KEY);
-        if (storedName) {
-            setPetName(storedName);
-        }
+        // ★ 名前と色を読み込む関数
+        const updatePetSettings = () => {
+            const storedName = localStorage.getItem(PET_NAME_STORAGE_KEY);
+            if (storedName) {
+                setPetName(storedName);
+            }
+            const storedColor = localStorage.getItem(PET_COLOR_STORAGE_KEY);
+            if (storedColor) {
+                setPetColor(storedColor);
+            }
+        };
 
+        // ★ 1. マウント時に設定を読み込む
+        updatePetSettings();
+
+        // ★ 2. 設定変更イベントを監視 (設定ページでの変更を即時反映)
+        const handleSettingsChanged = () => {
+            updatePetSettings();
+        };
+        window.addEventListener(PET_SETTINGS_CHANGED_EVENT, handleSettingsChanged);
+        // ★ 3. 他のタブでの変更も監視
+        window.addEventListener('storage', handleSettingsChanged);
+
+        // --- (↓既存の天気取得ロジック↓) ---
         const fetchWeatherDataByLocation = (latitude: number, longitude: number) => {
-            setError(null); // API呼び出し前にエラーをクリア
+            setError(null);
             fetch(`/api/weather/forecast?lat=${latitude}&lon=${longitude}`)
                 .then(res => {
                     if (!res.ok) {
                         return res.json().then(errData => {
                             throw new Error(errData.message || `HTTP error! status: ${res.status}`);
-                        }).catch(() => { // JSON パース失敗時のフォールバック
+                        }).catch(() => {
                             throw new Error(`HTTP error! status: ${res.status}`);
                         });
                     }
                     return res.json();
                 })
                 .then(data => {
-                    // APIレスポンスの構造をより安全にチェック
                     if (!data?.list?.[0]?.weather?.[0]?.main || typeof data.list[0].main?.temp !== 'number') {
                         throw new Error('天気データの形式が正しくありません。');
                     }
                     const currentWeather = data.list[0];
-                    const newWeather = mapWeatherType(currentWeather); // ★ 変数に格納
-                    setLocation(data.city?.name || "不明な場所"); // Optional chaining
+                    const newWeather = mapWeatherType(currentWeather);
+                    setLocation(data.city?.name || "不明な場所");
                     setTemperature(Math.round(currentWeather.main.temp));
-
-                    // 天気設定を共通関数経由で行う
                     setWeatherAndNotify(newWeather);
                 })
                 .catch(err => {
@@ -178,9 +183,7 @@ export default function TenChanHomeClient({ initialData }) { // initialData は 
                     setError(err.message || "お天気情報の取得に失敗しました。");
                     setLocation("取得失敗");
                     setTemperature(null);
-
-                    // エラー時も共通関数経由で設定
-                    setWeatherAndNotify(null); // nullは 'sunny' として処理される
+                    setWeatherAndNotify(null);
                 })
                 .finally(() => {
                     setIsLoading(false);
@@ -205,8 +208,6 @@ export default function TenChanHomeClient({ initialData }) { // initialData は 
                     setError(errorMessage);
                     setLocation("？？？");
                     setTemperature(null);
-
-                    // エラー時も共通関数経由で設定
                     setWeatherAndNotify(null);
                     setIsLoading(false);
                 },
@@ -216,19 +217,22 @@ export default function TenChanHomeClient({ initialData }) { // initialData は 
             setError("ごめんね、このアプリだと\nいまどこにいるかの機能が使えないみたい…");
             setLocation("？？？");
             setTemperature(null);
-
-            // エラー時も共通関数経由で設定
             setWeatherAndNotify(null);
             setIsLoading(false);
         }
 
         const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+        // --- (↑既存の天気取得ロジック↑) ---
 
         return () => {
             clearInterval(timer);
             if (messageTimeoutRef.current) clearTimeout(messageTimeoutRef.current);
+            // ★ イベントリスナーを解除
+            window.removeEventListener(PET_SETTINGS_CHANGED_EVENT, handleSettingsChanged);
+            window.removeEventListener('storage', handleSettingsChanged);
         };
-    }, []); // 空の依存配列
+    }, []);
+    // --- ▲▲▲ 変更点3ここまで ▲▲▲ ---
 
     const handleConfirmWalk = () => {
         setIsModalOpen(false);
@@ -267,26 +271,25 @@ export default function TenChanHomeClient({ initialData }) { // initialData は 
                         </p>
                     )}
 
-                    {/* --- ↓↓↓ ローディング中の表示を変更 ↓↓↓ --- */}
                     {isLoading ? (
                         <div className="flex-grow flex flex-col items-center justify-center gap-y-4 p-3 text-center pb-20">
                             <div className="w-40 h-40 flex items-center justify-center">
-                                {/* ローディング中は顔を表示しない */}
                             </div>
                             <div>
-                                {/* テキストを変更 */}
                                 <h1 className="text-xl font-medium text-slate-500 animate-pulse">てんちゃん じゅんびちゅう...</h1>
                             </div>
                         </div>
                     ) : (
+                        // --- ▼▼▼ 変更点4: petColor を渡す ▼▼▼ ---
                         <CharacterDisplay
                             petName={petName}
+                            petColor={petColor}
                             mood={error ? "sad" : "happy"}
                             message={message}
                             onCharacterClick={handleCharacterClick}
                         />
+                        // --- ▲▲▲ 変更点4ここまで ▲▲▲ ---
                     )}
-                    {/* --- ↑↑↑ ローディング中の表示を変更 ↑↑↑ --- */}
 
                     <Footer onWalkClick={() => setIsModalOpen(true)} />
                 </div>
