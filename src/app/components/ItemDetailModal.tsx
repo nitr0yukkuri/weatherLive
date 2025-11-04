@@ -58,7 +58,8 @@ export default function ItemDetailModal({ isOpen, onClose, item }: Props) {
                     >
                         {/* アイコン */}
                         <div className="relative mb-2">
-                            <ItemIcon name={item.iconName} size={80} />
+                            {/* ★★★ ここを修正: rarity={item.rarity} を追加 ★★★ */}
+                            <ItemIcon name={item.iconName} rarity={item.rarity} size={80} />
                         </div>
 
                         <p className="text-2xl font-bold text-slate-800">{item.name}</p>
