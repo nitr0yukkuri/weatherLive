@@ -8,6 +8,8 @@ import Footer from './Footer';
 import WeatherDisplay from './WeatherDisplay';
 import CharacterDisplay from './CharacterDisplay';
 import ConfirmationModal from './ConfirmationModal';
+// ★ 1. ItemGetModal をインポート
+import ItemGetModal from './ItemGetModal';
 
 // --- ★ 型定義 ---
 type WeatherType = "sunny" | "clear" | "rainy" | "cloudy" | "snowy" | "thunderstorm" | "windy" | "night";
@@ -21,17 +23,19 @@ const PET_SETTINGS_CHANGED_EVENT = 'petSettingsChanged'; // ★ 設定変更イ�
 // --- ▲▲▲ 変更点1ここまで ▲▲▲ ---
 
 // --- ★ ヘルパー関数 (変更なし) ---
+// ★★★ ここを修正: 各パターンのセリフをてんちゃん風に修正・増量 ★★★
 const conversationMessages = {
-    sunny: ["おひさまが気持ちいいね！", "こんな日はおさんぽしたくなるな〜"],
-    clear: ["雲ひとつないね！", "空がとっても青いよ！"],
-    cloudy: ["今日は過ごしやすいね！", "雲の形をずっと見ていられるなあ…"],
-    rainy: ["雨の音が聞こえるね", "傘は持った？"],
-    thunderstorm: ["ゴロゴロって音がする…！", "ちょっとだけこわいかも…"],
-    snowy: ["わー！雪だ！", "雪だるま、作れるかな？"],
-    windy: ["風がびゅーびゅー言ってる！", "帽子が飛ばされそうだ〜"],
-    night: ["今日もおつかれさま", "星が見えるかな？"],
-    default: ["こんにちは！", "なになに？", "えへへっ"]
+    sunny: ["おひさまが気持ちいいね！", "こんな日はおさんぽしたくなるな〜", "あったかいね〜！", "ぽかぽかするね", "おせんたくびよりだ！", "まぶしいな〜！"],
+    clear: ["雲ひとつないね！", "空がとっても青いよ！", "どこまでも見えそう！", "すがすがしい気分！", "飛行機雲が見えるかも？", "深呼吸したくなるね〜"],
+    cloudy: ["今日は過ごしやすいね！", "雲の形をずっと見ていられるなあ…", "おひさまはどこかな？", "雨、降らないといいな〜", "雲がゆっくり動いてるよ", "日焼けの心配がなくていいね！"],
+    rainy: ["雨の音が聞こえるね", "傘は持った？", "あめ、あめ、ふれ、ふれ♪", "かたつむりさん、いるかな？", "しっとりするね", "雨宿りしよっか！"],
+    thunderstorm: ["ゴロゴロって音がする…！", "ちょっとだけこわいかも…", "おへそ隠さなきゃ！", "ひゃっ！光った！", "はやくおさまるといいね", "嵐が来てるみたい…！"],
+    snowy: ["わー！雪だ！", "雪だるま、作れるかな？", "ふわふわしてるね", "まっしろだね！", "さむいけど、きれい！", "こんこんっ"],
+    windy: ["風がびゅーびゅー言ってる！", "帽子が飛ばされそうだ〜", "わわっ！とばされちゃう〜！", "色んなものが飛んでる！", "髪がぐちゃぐちゃだよ〜！", "風ぐるまがよく回りそう！"],
+    night: ["今日もおつかれさま", "星が見えるかな？", "そろそろ眠いかも…", "いい夢みてね", "静かだね…", "おやすみなさい…"],
+    default: ["こんにちは！", "なになに？", "えへへっ", "今日も元気だよ！", "何か用かな？", "わーい！", "やっほー！", "（なでなでして！）", "今日はどんな日？", "るんるん♪"]
 };
+// ★★★ 修正ここまで ★★★
 
 const getBackgroundGradientClass = (weather: WeatherType | null): string => {
     switch (weather) {
@@ -95,6 +99,11 @@ export default function TenChanHomeClient({ initialData }) {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    // ★ 2. アイテム取得モーダルのための State を追加
+    const [isItemGetModalOpen, setIsItemGetModalOpen] = useState(false);
+    const [newItem, setNewItem] = useState<{ name: string; iconName: string | null; rarity: string | null } | null>(null);
+
+
     const timeOfDay = getTimeOfDay(currentTime);
 
     const setWeatherAndNotify = (newWeather: WeatherType | null) => {
@@ -115,15 +124,23 @@ export default function TenChanHomeClient({ initialData }) {
         messageTimeoutRef.current = setTimeout(() => { setMessage(null); }, 2000);
     };
 
-    const cycleWeather = () => { // デバッグ用
+    // デバッグ（おさんぽ）用
+    const cycleWeather = () => {
+        console.log("Cycling weather"); // 既存のログ
         setWeather(prev => {
+            // ★★★ 修正: "clear" と "night" を追加 ★★★
             const weathers: WeatherType[] = ["sunny", "clear", "cloudy", "rainy", "thunderstorm", "snowy", "windy", "night"];
             const currentIndex = prev ? weathers.indexOf(prev) : -1;
             const nextWeather = weathers[(currentIndex + 1) % weathers.length];
+
+            console.log("Current weather:", prev, "Next weather:", nextWeather); // ログ追加
+
+            // 状態を更新し、localStorageにも保存
             setWeatherAndNotify(nextWeather);
             return nextWeather;
         });
     };
+
 
     // --- ▼▼▼ 変更点3: 設定読み込み関数とイベントリスナーを追加 ▼▼▼ ---
     useEffect(() => {
@@ -154,7 +171,7 @@ export default function TenChanHomeClient({ initialData }) {
         // ★ 3. 他のタブでの変更も監視
         window.addEventListener('storage', handleSettingsChanged);
 
-        // --- (↓既存の天気取得ロaジック↓) ---
+        // --- (↓既存の天気取得ロジック↓) ---
         const fetchWeatherDataByLocation = (latitude: number, longitude: number) => {
             setError(null);
             fetch(`/api/weather/forecast?lat=${latitude}&lon=${longitude}`)
@@ -190,36 +207,48 @@ export default function TenChanHomeClient({ initialData }) {
                 });
         };
 
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    fetchWeatherDataByLocation(position.coords.latitude, position.coords.longitude);
-                },
-                (geoError) => {
-                    console.error("Geolocation Error:", geoError);
-                    let errorMessage = "あれれ、いまどこにいるか分かんなくなっちゃった…";
-                    if (geoError.code === geoError.PERMISSION_DENIED) {
-                        errorMessage = "いまどこにいるか、教えてほしいな！\n（ブラウザの設定を確認してみてね）";
-                    } else if (geoError.code === geoError.POSITION_UNAVAILABLE) {
-                        errorMessage = "うーん、いまいる場所がうまく掴めないみたい…";
-                    } else if (geoError.code === geoError.TIMEOUT) {
-                        errorMessage = "場所を探すのに時間がかかっちゃった…\nもう一回試してみて！";
-                    }
-                    setError(errorMessage);
-                    setLocation("？？？");
-                    setTemperature(null);
-                    setWeatherAndNotify(null);
-                    setIsLoading(false);
-                },
-                { timeout: 10000 }
-            );
-        } else {
-            setError("ごめんね、このアプリだと\nいまどこにいるかの機能が使えないみたい…");
-            setLocation("？？？");
-            setTemperature(null);
-            setWeatherAndNotify(null);
+        // ★★★ ここから修正 (initialData の扱い) ★★★
+        // initialData があっても、weather が null ならクライアントで取得
+        if (initialData && initialData.weather) {
+            setLocation(initialData.location);
+            setTemperature(initialData.temperature);
+            setWeatherAndNotify(initialData.weather);
             setIsLoading(false);
+        } else {
+            // initialData が null、または weather が null の場合
+            // (page.tsx で weather: null を渡すようにしたため、こちらが実行される)
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        fetchWeatherDataByLocation(position.coords.latitude, position.coords.longitude);
+                    },
+                    (geoError) => {
+                        console.error("Geolocation Error:", geoError);
+                        let errorMessage = "あれれ、いまどこにいるか分かんなくなっちゃった…";
+                        if (geoError.code === geoError.PERMISSION_DENIED) {
+                            errorMessage = "いまどこにいるか、教えてほしいな！\n（ブラウザの設定を確認してみてね）";
+                        } else if (geoError.code === geoError.POSITION_UNAVAILABLE) {
+                            errorMessage = "うーん、いまいる場所がうまく掴めないみたい…";
+                        } else if (geoError.code === geoError.TIMEOUT) {
+                            errorMessage = "場所を探すのに時間がかかっちゃった…\nもう一回試してみて！";
+                        }
+                        setError(errorMessage);
+                        setLocation("？？？");
+                        setTemperature(null);
+                        setWeatherAndNotify(null);
+                        setIsLoading(false);
+                    },
+                    { timeout: 10000 }
+                );
+            } else {
+                setError("ごめんね、このアプリだと\nいまどこにいるかの機能が使えないみたい…");
+                setLocation("？？？");
+                setTemperature(null);
+                setWeatherAndNotify(null);
+                setIsLoading(false);
+            }
         }
+        // ★★★ 修正ここまで ★★★
 
         const timer = setInterval(() => setCurrentTime(new Date()), 60000);
         // --- (↑既存の天気取得ロジック↑) ---
@@ -231,68 +260,119 @@ export default function TenChanHomeClient({ initialData }) {
             window.removeEventListener(PET_SETTINGS_CHANGED_EVENT, handleSettingsChanged);
             window.removeEventListener('storage', handleSettingsChanged);
         };
-    }, []);
+    }, [initialData]); // ★ 依存配列に initialData を追加
     // --- ▲▲▲ 変更点3ここまで ▲▲▲ ---
 
-    const handleConfirmWalk = () => {
+    // ★ 3. おさんぽ完了時の処理
+    const handleConfirmWalk = async () => {
         setIsModalOpen(false);
         const walkWeather = weather || 'sunny';
-        router.push(`/walk?weather=${walkWeather}`);
+
+        // 開発用の /walk ページへの遷移を維持
+        if (process.env.NODE_ENV === 'development' || (isClient && window.location.search.includes('debug'))) {
+            router.push(`/walk?weather=${walkWeather}`);
+            return;
+        }
+
+        // --- 本番用: APIを叩いてアイテムゲット ---
+        try {
+            const response = await fetch('/api/walk/complete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ weather: walkWeather }),
+            });
+
+            if (!response.ok) {
+                throw new Error('おさんぽに失敗しました');
+            }
+
+            const data = await response.json();
+
+            // アイテム取得モーダルを表示
+            if (data.item) {
+                setNewItem({
+                    name: data.item.name,
+                    iconName: data.item.iconName,
+                    rarity: data.item.rarity,
+                });
+                setIsItemGetModalOpen(true);
+            } else {
+                // アイテムがなかった場合 (デバッグ用アラートなど)
+                alert("アイテムは見つからなかったみたい…");
+            }
+
+        } catch (err) {
+            console.error(err);
+            // エラー時も /walk にフォールバック (必要に応じて)
+            // router.push(`/walk?weather=${walkWeather}`);
+            alert("エラーが発生しました: " + (err as Error).message);
+        }
     };
+
 
     const displayWeatherType = weather || 'sunny';
     const dynamicBackgroundClass = getBackgroundGradientClass(displayWeatherType);
 
     return (
         <div className="w-full min-h-screen bg-gray-200 flex items-center justify-center p-4">
+            {/* ★ 4. アイテム取得モーダルをレンダリング */}
+            <ItemGetModal
+                isOpen={isItemGetModalOpen}
+                onClose={() => setIsItemGetModalOpen(false)}
+                itemName={newItem?.name || null}
+                iconName={newItem?.iconName || null}
+                rarity={newItem?.rarity || null}
+            />
+
+            <ConfirmationModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onConfirm={handleConfirmWalk}>
+                <p className="text-center text-xl font-bold leading-relaxed text-gray-800">
+                    おさんぽにでかけますか？
+                </p>
+            </ConfirmationModal>
+
             <main
                 className={`w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col text-[#5D4037] ${dynamicBackgroundClass} transition-all duration-500`}
             >
-                <ConfirmationModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onConfirm={handleConfirmWalk}>
-                    <p className="text-center text-xl font-bold leading-relaxed text-gray-800">
-                        おさんぽにでかけますか？
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-black/80 rounded-b-xl"></div>
+
+                {/* ★ 5. onCycleWeather を WeatherDisplay に渡す */}
+                <WeatherDisplay
+                    weather={isLoading || error ? null : displayWeatherType}
+                    timeOfDay={timeOfDay}
+                    isClient={isClient}
+                    currentTime={currentTime}
+                    temperature={temperature}
+                    location={isLoading ? "取得中..." : (error ? "？？？" : location)}
+                    onCycleWeather={cycleWeather} // ★ これ
+                />
+
+                {error && (
+                    <p className="text-center text-sm text-red-600 bg-red-100 p-2 mx-4 rounded -mt-4 mb-2 shadow-sm whitespace-pre-line">
+                        {error}
                     </p>
-                </ConfirmationModal>
+                )}
 
-                <div className="relative z-10 flex flex-col flex-grow">
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-black/80 rounded-b-xl"></div>
-                    <WeatherDisplay
-                        weather={isLoading || error ? null : displayWeatherType}
-                        timeOfDay={timeOfDay}
-                        isClient={isClient}
-                        currentTime={currentTime}
-                        temperature={temperature}
-                        location={isLoading ? "取得中..." : (error ? "？？？" : location)}
-                        onCycleWeather={cycleWeather}
-                    />
-                    {error && (
-                        <p className="text-center text-sm text-red-600 bg-red-100 p-2 mx-4 rounded -mt-4 mb-2 shadow-sm whitespace-pre-line">
-                            {error}
-                        </p>
-                    )}
-
-                    {isLoading ? (
-                        <div className="flex-grow flex flex-col items-center justify-center gap-y-4 p-3 text-center pb-20">
-                            <div className="w-40 h-40 flex items-center justify-center">
-                            </div>
-                            <div>
-                                <h1 className="text-xl font-medium text-slate-500 animate-pulse">てんちゃん じゅんびちゅう...</h1>
-                            </div>
+                {isLoading ? (
+                    <div className="flex-grow flex flex-col items-center justify-center gap-y-4 p-3 text-center pb-20">
+                        <div className="w-40 h-40 flex items-center justify-center">
                         </div>
-                    ) : (
-                        // --- ▼▼▼ 変更点4: petColor を渡す ▼▼▼ ---
-                        <CharacterDisplay
-                            petName={petName}
-                            petColor={petColor}
-                            mood={error ? "sad" : "happy"}
-                            message={message}
-                            onCharacterClick={handleCharacterClick}
-                        />
-                        // --- ▲▲▲ 変更点4ここまで ▲▲▲ ---
-                    )}
+                        <div>
+                            <h1 className="text-xl font-medium text-slate-500 animate-pulse">てんちゃん じゅんびちゅう...</h1>
+                        </div>
+                    </div>
+                ) : (
+                    // --- ▼▼▼ 変更点4: petColor を渡す ▼▼▼ ---
+                    <CharacterDisplay
+                        petName={petName}
+                        petColor={petColor}
+                        mood={error ? "sad" : "happy"}
+                        message={message}
+                        onCharacterClick={handleCharacterClick}
+                    />
+                    // --- ▲▲▲ 変更点4ここまで ▲▲▲ ---
+                )}
 
-                    <Footer onWalkClick={() => setIsModalOpen(true)} />
-                </div>
+                <Footer onWalkClick={() => setIsModalOpen(true)} />
             </main>
         </div>
     );
