@@ -2,9 +2,13 @@
 
 'use client';
 
+// ★ 1. motion と AnimatePresence をインポート
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Footer from '../components/Footer';
+import { motion, AnimatePresence } from 'framer-motion'; // ★ 追加
+import React from 'react'; // ★★★ 「React is not defined」エラー解消のため追加 ★★★
+
 // --- ▼▼▼ 必要なアイコンを import ▼▼▼ ---
 import {
     FaSeedling, FaTrophy, FaStar, FaMapMarkerAlt, FaRegSnowflake, FaCloudShowersHeavy, FaWind, FaMoon, FaBookOpen
@@ -14,9 +18,9 @@ import { BsSunFill, BsCloudFill, BsFillCloudLightningRainFill } from 'react-icon
 import { GiSnail, GiAcorn, GiStoneBlock } from 'react-icons/gi';
 // --- ▲▲▲ アイコンここまで ▲▲▲ ---
 
-// --- ▼▼▼ 背景ここから ▼▼▼ ---
+// --- (背景ロジックはそのまま) ---
 type WeatherType = "sunny" | "clear" | "rainy" | "cloudy" | "snowy" | "thunderstorm" | "windy" | "night";
-const CURRENT_WEATHER_KEY = 'currentWeather'; // localStorage キー
+const CURRENT_WEATHER_KEY = 'currentWeather';
 
 const getBackgroundGradientClass = (weather: WeatherType | null): string => {
     switch (weather) {
@@ -28,30 +32,25 @@ const getBackgroundGradientClass = (weather: WeatherType | null): string => {
         case 'windy': return 'bg-windy';
         case 'night': return 'bg-night';
         case 'sunny':
-        default: return 'bg-sunny'; // null の場合も sunny (初期表示など)
+        default: return 'bg-sunny';
     }
 };
 // --- ▲▲▲ 背景ここまで ▲▲▲ ---
 
 
-// 実績の型定義 (変更なし)
+// --- (型定義もそのまま) ---
 interface Achievement {
     id: number;
     title: string;
     description: string;
-    icon: JSX.Element;
+    icon: JSX.Element; // ★ JSX.Element を受け取る
     isUnlocked: boolean;
-    // --- ▼▼▼ progressKey の型を拡張 ▼▼▼ ---
-    progressKey: keyof UserProgress; // UserProgress のキー名を直接使うように変更
-    // --- ▲▲▲ 変更ここまで ▲▲▲ ---
+    progressKey: keyof UserProgress;
     goal: number;
     unit: string;
 }
-
-// UserProgress APIから取得するデータの型 (★ 拡張が必要)
 interface UserProgress {
     walkCount: number;
-    // --- ▼▼▼ ここから追加 ▼▼▼ ---
     sunnyWalkCount: number;
     clearWalkCount: number;
     rainyWalkCount: number;
@@ -67,14 +66,13 @@ interface UserProgress {
     collectedEpicItemTypesCount: number;
     collectedLegendaryItemTypesCount: number;
     consecutiveWalkDays: number;
-    lastWalkDate?: string | Date; // Date 型または string 型で受け取る可能性
-    // --- ▲▲▲ 追加ここまで ▲▲▲ ---
+    lastWalkDate?: string | Date;
 }
 
 
-// --- ▼▼▼ 実績のマスターデータを大幅に追加 ▼▼▼ ---
+// --- (masterAchievements もそのまま) ---
 const masterAchievements: Achievement[] = [
-    // --- おさんぽ回数系 ---
+    // ... (既存の実績データ) ...
     { id: 1, title: 'はじめてのおさんぽ', description: 'はじめておさんぽに出かけた', icon: <FaMapMarkerAlt size={24} />, isUnlocked: false, progressKey: 'walkCount', goal: 1, unit: 'かい' },
     { id: 2, title: 'おさんぽチャレンジャー', description: 'おさんぽに10回行った', icon: <FaMapMarkerAlt size={24} />, isUnlocked: false, progressKey: 'walkCount', goal: 10, unit: 'かい' },
     { id: 3, title: 'おさんぽエキスパート', description: 'おさんぽに50回行った', icon: <FaMapMarkerAlt size={24} />, isUnlocked: false, progressKey: 'walkCount', goal: 50, unit: 'かい' },
@@ -111,10 +109,8 @@ const masterAchievements: Achievement[] = [
 ];
 // --- ▲▲▲ 実績マスターデータここまで ▲▲▲ ---
 
-
-// 実績の進捗と達成状況を計算する関数 (★ 修正: progressKey の型チェックを改善)
+// --- (calculateAchievements もそのまま) ---
 const calculateAchievements = (progress: UserProgress | null, achievements: Achievement[]) => {
-    // ★ progress が null (取得失敗時など) の場合のフォールバックを追加
     if (!progress) {
         return achievements.map(ach => ({
             ...ach,
@@ -124,9 +120,7 @@ const calculateAchievements = (progress: UserProgress | null, achievements: Achi
     }
 
     const calculated = achievements.map(ach => {
-        // ★ progressKey が progress オブジェクトに存在するか確認
         const currentProgress = (ach.progressKey in progress) ? (progress[ach.progressKey] || 0) : 0;
-        // ★ currentProgress が数値であることを保証 (Date型などを弾く)
         const numericProgress = typeof currentProgress === 'number' ? currentProgress : 0;
 
         const isUnlocked = numericProgress >= ach.goal;
@@ -139,27 +133,89 @@ const calculateAchievements = (progress: UserProgress | null, achievements: Achi
         };
     });
 
-    // ソートロジックは変更なし
     return calculated.sort((a, b) => {
         if (a.isUnlocked && !b.isUnlocked) return -1;
         if (!a.isUnlocked && b.isUnlocked) return 1;
-        // 未達成同士、達成済み同士は ID 順にするなど
         return a.id - b.id;
     });
 };
+// --- ▲▲▲ calculateAchievements ここまで ▲▲▲ ---
+
+
+// --- ▼▼▼ 2. 実績詳細モーダルコンポーネントを新しく定義 ▼▼▼ ---
+// (ItemDetailModal.tsx を参考に、実績用にカスタマイズ)
+
+// モーダル用のProps型
+type AchievementDetailModalProps = {
+    isOpen: boolean;
+    onClose: () => void;
+    achievement: (Achievement & { progress: number }) | null; // ★ Achievement 型を受け取る
+};
+
+function AchievementDetailModal({ isOpen, onClose, achievement }: AchievementDetailModalProps) {
+    if (!achievement) return null;
+
+    return (
+        <AnimatePresence>
+            {isOpen && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50"
+                    onClick={onClose}
+                >
+                    <motion.div
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.9, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="bg-white rounded-2xl p-8 w-full max-w-xs text-center shadow-xl flex flex-col items-center gap-y-4"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* アイコン (Achievement オブジェクトから直接JSX要素を表示) */}
+                        <div className="relative mb-2 text-green-600 text-6xl">
+                            {/* 達成済みなので色は固定 (例: text-green-600) */}
+                            {/* アイコンのサイズを大きくするため、propsを上書き */}
+                            {React.cloneElement(achievement.icon, { size: 60 })}
+                        </div>
+
+                        <p className="text-2xl font-bold text-slate-800">{achievement.title}</p>
+
+                        {/* 説明 */}
+                        <div className="text-sm text-slate-600 space-y-1">
+                            <p className="text-center">{achievement.description}</p>
+                        </div>
+
+                        {/* OKボタン */}
+                        <button
+                            onClick={onClose}
+                            className="w-full bg-gray-900 text-white font-bold py-3 rounded-full text-lg hover:bg-gray-700 transition-colors active:scale-95 mt-4"
+                        >
+                            OK！
+                        </button>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+    );
+}
+// --- ▲▲▲ 2. モーダル定義ここまで ▲▲▲ ---
 
 
 export default function AchievementsPage() {
-    // ★ 背景色のための State
     const [dynamicBackgroundClass, setDynamicBackgroundClass] = useState('bg-sunny');
-
-    // ★ UserProgress | null 型を受け付けるように変更
     const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
     const [achievements, setAchievements] = useState<(Achievement & { progress: number })[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null); // ★ エラー状態を追加
+    const [error, setError] = useState<string | null>(null);
 
-    // ★ 背景色を localStorage から読み込む useEffect
+    // --- ▼▼▼ 3. モーダル用の State を追加 ▼▼▼ ---
+    const [selectedAchievement, setSelectedAchievement] = useState<(Achievement & { progress: number }) | null>(null);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    // --- ▲▲▲ 3. モーダル用の State ここまで ▲▲▲ ---
+
+    // (useEffectフックたちはそのまま)
     useEffect(() => {
         const storedWeather = localStorage.getItem(CURRENT_WEATHER_KEY) as WeatherType | null;
         setDynamicBackgroundClass(getBackgroundGradientClass(storedWeather));
@@ -168,25 +224,22 @@ export default function AchievementsPage() {
     useEffect(() => {
         const fetchProgress = async () => {
             setLoading(true);
-            setError(null); // ★ エラーをリセット
+            setError(null);
             try {
                 const progressResponse = await fetch('/api/progress');
-                // ★ レスポンスが NG の場合の処理を追加
                 if (!progressResponse.ok) {
                     const errorData = await progressResponse.json();
                     throw new Error(errorData.message || '進捗情報の取得に失敗しました');
                 }
                 const progressData: UserProgress = await progressResponse.json();
-                setUserProgress(progressData); // ★ 取得したデータを state に保存
+                setUserProgress(progressData);
 
-                // ★ 最新の進捗データを使って実績を計算
                 const calculatedAchievements = calculateAchievements(progressData, masterAchievements);
                 setAchievements(calculatedAchievements);
 
-            } catch (err: any) { // ★ any 型でエラーを受け取る
+            } catch (err: any) {
                 console.error("進捗情報の取得または実績計算に失敗しました", err);
-                setError(err.message || '情報の取得に失敗しました。'); // ★ エラーメッセージを設定
-                // ★ エラー時は進捗 0 として表示
+                setError(err.message || '情報の取得に失敗しました。');
                 setAchievements(calculateAchievements(null, masterAchievements));
             } finally {
                 setLoading(false);
@@ -194,14 +247,22 @@ export default function AchievementsPage() {
         };
 
         fetchProgress();
-    }, []); // 依存配列は空のまま
+    }, []);
+    // --- ▲▲▲ useEffect ここまで ▲▲▲ ---
 
-    // 実績カードコンポーネント (AchievementItem) は変更なし ...
-    // 実績カードコンポーネント
+
+    // --- ▼▼▼ 4. AchievementItem コンポーネントを修正 ▼▼▼ ---
     const AchievementItem = ({ achievement }: { achievement: Achievement & { progress: number } }) => {
-        // 進捗が100%を超えないように調整
         const progressPercentage = achievement.goal > 0 ? Math.min((achievement.progress / achievement.goal) * 100, 100) : (achievement.isUnlocked ? 100 : 0);
         const progressBarColor = achievement.isUnlocked ? 'bg-green-600' : 'bg-yellow-500';
+
+        // ★ クリックハンドラを追加
+        const handleAchievementClick = () => {
+            if (achievement.isUnlocked) {
+                setSelectedAchievement(achievement);
+                setIsDetailModalOpen(true);
+            }
+        };
 
         return (
             <div className={`p-4 rounded-2xl shadow-lg transition-all
@@ -212,7 +273,8 @@ export default function AchievementsPage() {
                     <div className={`flex-shrink-0 w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center p-1 border border-gray-300
                         ${achievement.isUnlocked ? 'text-green-600' : 'text-gray-400 opacity-70'}
                     `}>
-                        <div className="text-3xl">
+                        {/* ★ アイコンのサイズを調整 (text-3xl -> text-4xl) */}
+                        <div className="text-4xl">
                             {achievement.icon}
                         </div>
                     </div>
@@ -229,22 +291,25 @@ export default function AchievementsPage() {
                         <div className="mt-3">
                             {achievement.isUnlocked ? (
                                 // 達成済み
-                                <button className="w-full bg-black text-white font-bold py-2 rounded-lg text-sm shadow-md cursor-default">
+                                // ★ button に onClick を追加し、cursor-pointer に変更
+                                <button
+                                    onClick={handleAchievementClick}
+                                    className="w-full bg-black text-white font-bold py-2 rounded-lg text-sm shadow-md transition-colors hover:bg-gray-700 active:scale-95 cursor-pointer"
+                                >
                                     完了！
                                 </button>
                             ) : (
-                                // 未達成
+                                // 未達成 (変更なし)
                                 <div className="space-y-1">
                                     <div className="flex justify-between items-end">
                                         <p className="text-xs text-slate-500 font-bold">
                                             {achievement.unit}
                                         </p>
                                         <span className="text-sm font-bold text-slate-700">
-                                            {/* goal が 0 の場合表示がおかしくなる可能性があるので考慮 */}
                                             {achievement.goal > 0 ? `${achievement.progress}/${achievement.goal}` : `${achievement.progress}`}
                                         </span>
                                     </div>
-                                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden"> {/* ★ overflow-hidden を追加 */}
+                                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                                         <div
                                             className={`${progressBarColor} h-full rounded-full transition-all duration-500`}
                                             style={{ width: `${progressPercentage}%` }}
@@ -258,27 +323,35 @@ export default function AchievementsPage() {
             </div>
         );
     };
+    // --- ▲▲▲ 4. AchievementItem 修正ここまで ▲▲▲ ---
 
 
     return (
         <div className="w-full min-h-screen bg-gray-200 flex items-center justify-center p-4">
-            {/* ★★★ main タグの className を変更 ★★★ */}
-            <main className={`w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col text-slate-700 ${dynamicBackgroundClass}`}>
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-black/80 rounded-b-xl z-10"></div>
 
+            {/* --- ▼▼▼ 5. モーダルをレンダリング ▼▼▼ --- */}
+            <AchievementDetailModal
+                isOpen={isDetailModalOpen}
+                onClose={() => setIsDetailModalOpen(false)}
+                achievement={selectedAchievement}
+            />
+            {/* --- ▲▲▲ 5. モーダルレンダリングここまで ▲▲▲ --- */}
+
+            <main className={`w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col text-slate-700 ${dynamicBackgroundClass}`}>
+
+                {/* (ヘッダーなどは変更なし) */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-black/80 rounded-b-xl z-10"></div>
                 <div className="flex-grow overflow-y-auto p-6">
                     <header className="mb-8">
                         <Link href="/" className="text-slate-500 mb-6 inline-block text-sm hover:text-slate-700 transition-colors">← もどる</Link>
-                        {/* ★★★ h1 タグの className を変更 (視認性UP) ★★★ */}
                         <h1 className="text-4xl font-extrabold text-slate-800 tracking-wider flex items-center gap-2 backdrop-blur-sm bg-white/30 rounded-lg px-4 py-1">
                             実績
-                            {/* ★ アイコンを FaTrophy に変更 */}
                             <FaTrophy size={28} className="text-slate-500" />
                         </h1>
                         <p className="text-slate-500 mt-1">てんちゃんとの思い出を見てみよう</p>
                     </header>
 
-                    {/* ★ ローディングとエラー表示を追加 */}
+                    {/* (ローディング・エラー表示も変更なし) */}
                     {loading ? (
                         <p className="text-center animate-pulse text-slate-500">実績を読み込み中...</p>
                     ) : error ? (
