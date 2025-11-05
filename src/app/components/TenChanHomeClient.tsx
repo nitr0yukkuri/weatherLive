@@ -100,7 +100,6 @@ export default function TenChanHomeClient({ initialData }) {
     const [error, setError] = useState<string | null>(null);
 
     // ★ 2. アイテム取得モーダルのための State を追加
-    // ★★★ 修正: newItem の型に id を含める (コレクション登録で使うため) ★★★
     const [isItemGetModalOpen, setIsItemGetModalOpen] = useState(false);
     const [newItem, setNewItem] = useState<{ id: number | null; name: string; iconName: string | null; rarity: string | null } | null>(null);
 
@@ -265,75 +264,13 @@ export default function TenChanHomeClient({ initialData }) {
     // --- ▲▲▲ 変更点3ここまで ▲▲▲ ---
 
     // ★ 3. おさんぽ完了時の処理
-    const handleConfirmWalk = async () => {
+    const handleConfirmWalk = () => { // ★ async を削除
         setIsModalOpen(false);
         const walkWeather = weather || 'sunny';
 
-        // 開発用の /walk ページへの遷移を維持
-        if (process.env.NODE_ENV === 'development' || (isClient && window.location.search.includes('debug'))) {
-            router.push(`/walk?weather=${walkWeather}`);
-            return;
-        }
-
         // --- ▼▼▼ ここから修正 ▼▼▼ ---
-        // 本番用: APIを叩いてアイテムゲット
-        try {
-            // 1. アイテムを抽選
-            const itemResponse = await fetch('/api/items/obtain', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ weather: walkWeather }),
-            });
-
-            let obtainedItemData: { id: number | null; name: string; iconName: string | null; rarity: string | null };
-
-            if (!itemResponse.ok) {
-                const itemError = await itemResponse.json();
-                // 404 (アイテムが見つからない) の場合は「ふしぎな石」にフォールバック
-                if (itemResponse.status === 404) {
-                    console.warn(itemError.message);
-                    // ★ データベースに存在しないアイテム (id: null) として設定
-                    obtainedItemData = { id: null, name: 'ふしぎな石', iconName: 'IoHelpCircle', rarity: 'normal' };
-                } else {
-                    // その他のエラー
-                    throw new Error(itemError.message || 'アイテム獲得に失敗しました');
-                }
-            } else {
-                const item = await itemResponse.json();
-                obtainedItemData = {
-                    id: item.id, // ★ id を含める
-                    name: item.name,
-                    iconName: item.iconName,
-                    rarity: item.rarity,
-                };
-            }
-
-            setNewItem(obtainedItemData); // ★ 取得した(またはフォールバックの)アイテムを State にセット
-
-            // 2. コレクションに記録 (アイテム獲得成功時のみ = id がある時)
-            if (obtainedItemData.id !== null) {
-                await fetch('/api/collection', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ itemId: obtainedItemData.id }),
-                });
-            }
-
-            // 3. おさんぽ回数を記録 (アイテム獲得の成否に関わらず実行)
-            await fetch('/api/walk/complete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ weather: walkWeather }), // ★ APIに合わせて weather を渡す
-            });
-
-            // 4. モーダルを表示
-            setIsItemGetModalOpen(true);
-
-        } catch (err) {
-            console.error(err);
-            // ★ エラー時はアラートを表示（デプロイ先ではデバッグが難しいため）
-            alert("エラーが発生しました: " + (err as Error).message);
-        }
+        // 常に /walk ページに遷移する
+        router.push(`/walk?weather=${walkWeather}`);
         // --- ▲▲▲ 修正ここまで ▲▲▲ ---
     };
 
@@ -343,7 +280,7 @@ export default function TenChanHomeClient({ initialData }) {
 
     return (
         <div className="w-full min-h-screen bg-gray-200 flex items-center justify-center p-4">
-            {/* ★ 4. アイテム取得モーダルをレンダリング */}
+            {/* ★ 4. アイテム取得モーダルをレンダリング (これは残す) */}
             <ItemGetModal
                 isOpen={isItemGetModalOpen}
                 onClose={() => setIsItemGetModalOpen(false)}

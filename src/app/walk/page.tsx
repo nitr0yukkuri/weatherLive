@@ -47,6 +47,7 @@ function WalkPageComponent() {
             hasStartedProcessing.current = true; // 処理開始を記録
             setIsProcessing(true); // 状態フラグも更新
 
+            // --- ▼▼▼ ここを 3000 (3秒) に変更 ▼▼▼ ---
             setTimeout(async () => {
                 try {
                     // 1. アイテムを抽選
@@ -80,7 +81,11 @@ function WalkPageComponent() {
                     }
 
                     // 3. おさんぽ回数を記録
-                    const walkCompleteResponse = await fetch('/api/walk/complete', { method: 'POST' }); // ★ レスポンスを変数に追加
+                    const walkCompleteResponse = await fetch('/api/walk/complete', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ weather: currentWeather }), // ★ 天候情報を渡す
+                    });
                     // ★ おさんぽ回数記録のエラーチェックを追加
                     if (!walkCompleteResponse.ok) {
                         const walkError = await walkCompleteResponse.json();
@@ -97,7 +102,11 @@ function WalkPageComponent() {
 
                     // エラー時もおさんぽ回数だけ記録を試みる (フォールバック)
                     try {
-                        await fetch('/api/walk/complete', { method: 'POST' });
+                        await fetch('/api/walk/complete', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ weather: currentWeather }), // ★ 天候情報を渡す
+                        });
                     } catch (e) {
                         console.error('フォールバックのおさんぽ回数記録にも失敗', e);
                     }
@@ -109,6 +118,7 @@ function WalkPageComponent() {
                     // setIsProcessing(false);
                 }
             }, 3000); // 3秒の待機時間
+            // --- ▲▲▲ 変更ここまで ▲▲▲ ---
         };
 
         // 位置情報取得 & 天気取得 & アイテム取得開始のロジック
@@ -140,9 +150,7 @@ function WalkPageComponent() {
                     if (!data.list) throw new Error(data.message || '天気情報が取得できませんでした');
                     setLocation(data.city.name || "不明な場所");
                     const current = data.list[0];
-                    const hour = new Date().getHours();
-                    const isNight = hour < 5 || hour >= 19;
-                    const realWeather = isNight ? 'night' : mapWeatherType(current);
+                    const realWeather = mapWeatherType(current); // ★ mapWeatherType を使用
                     setWeather(realWeather);
                     obtainItem(realWeather); // 天気取得後にアイテム取得処理を開始
                 })
@@ -155,7 +163,6 @@ function WalkPageComponent() {
                     setLocation("天気取得失敗");
                     setLoading(false);
                     // 天気取得失敗時はアイテム取得処理に進まない
-                    // 必要ならここで hasStartedProcessing.current = true; して二重実行を防ぐ
                     hasStartedProcessing.current = true; // エラーでも処理開始済みとする
                     setIsProcessing(false); // 処理は中断
                 });
@@ -264,23 +271,32 @@ const mapWeatherType = (weatherData: any): string => {
     const main = weatherData.weather[0].main.toLowerCase();
     const windSpeed = weatherData.wind.speed;
 
+    // ★★★ 変更点: 夜判定を追加 ★★★
+    const hour = new Date().getHours();
+    const isNight = hour < 5 || hour >= 19;
+    // ★★★ 変更点ここまで ★★★
+
     if (windSpeed >= 10) return "windy";
     if (main.includes("thunderstorm")) return "thunderstorm";
     if (main.includes("rain") || main.includes("drizzle")) return "rainy"; // drizzle も雨に含める
     if (main.includes("snow")) return "snowy";
-    if (main.includes("clear")) return "clear";
-    if (main.includes("clouds")) {
-        // 雲量に応じて cloudy か sunny (partly cloudy) を判断
-        const cloudiness = weatherData.clouds?.all; // clouds.all が存在するか確認
-        if (cloudiness !== undefined && cloudiness > 75) { // 75%以上なら曇りとする（閾値は調整可能）
-            return "cloudy";
-        }
-        return "sunny"; // それ以外は晴れ（または晴れ時々曇り）扱い
+
+    // ★★★ 変更点: clear と cloudy の判定を修正 ★★★
+    if (main.includes("clear")) {
+        return isNight ? "night" : "clear";
     }
-    // その他の天候コード (Mist, Smoke, Haze, Dust, Fog, Sand, Ash, Squall, Tornado)
-    // これらをどう扱うか決める (例: cloudy や windy に分類するなど)
-    // ここでは一旦 sunny にフォールバック
-    return "sunny";
+    if (main.includes("clouds")) {
+        const cloudiness = weatherData.clouds?.all;
+        if (cloudiness !== undefined && cloudiness > 75) {
+            // 曇りの場合も夜判定
+            return isNight ? "night" : "cloudy";
+        }
+        // 雲が少ない場合は晴れ扱い (夜判定も)
+        return isNight ? "night" : "sunny";
+    }
+
+    // ★★★ 変更点: デフォルトも夜判定 ★★★
+    return isNight ? "night" : "sunny";
 };
 
 const getBackgroundColorClass = (weatherType?: string): string => {
