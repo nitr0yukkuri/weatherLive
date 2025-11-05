@@ -100,8 +100,9 @@ export default function TenChanHomeClient({ initialData }) {
     const [error, setError] = useState<string | null>(null);
 
     // ★ 2. アイテム取得モーダルのための State を追加
+    // ★★★ 修正: newItem の型に id を含める (コレクション登録で使うため) ★★★
     const [isItemGetModalOpen, setIsItemGetModalOpen] = useState(false);
-    const [newItem, setNewItem] = useState<{ name: string; iconName: string | null; rarity: string | null } | null>(null);
+    const [newItem, setNewItem] = useState<{ id: number | null; name: string; iconName: string | null; rarity: string | null } | null>(null);
 
 
     const timeOfDay = getTimeOfDay(currentTime);
@@ -274,39 +275,66 @@ export default function TenChanHomeClient({ initialData }) {
             return;
         }
 
-        // --- 本番用: APIを叩いてアイテムゲット ---
+        // --- ▼▼▼ ここから修正 ▼▼▼ ---
+        // 本番用: APIを叩いてアイテムゲット
         try {
-            const response = await fetch('/api/walk/complete', {
+            // 1. アイテムを抽選
+            const itemResponse = await fetch('/api/items/obtain', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ weather: walkWeather }),
             });
 
-            if (!response.ok) {
-                throw new Error('おさんぽに失敗しました');
-            }
+            let obtainedItemData: { id: number | null; name: string; iconName: string | null; rarity: string | null };
 
-            const data = await response.json();
-
-            // アイテム取得モーダルを表示
-            if (data.item) {
-                setNewItem({
-                    name: data.item.name,
-                    iconName: data.item.iconName,
-                    rarity: data.item.rarity,
-                });
-                setIsItemGetModalOpen(true);
+            if (!itemResponse.ok) {
+                const itemError = await itemResponse.json();
+                // 404 (アイテムが見つからない) の場合は「ふしぎな石」にフォールバック
+                if (itemResponse.status === 404) {
+                    console.warn(itemError.message);
+                    // ★ データベースに存在しないアイテム (id: null) として設定
+                    obtainedItemData = { id: null, name: 'ふしぎな石', iconName: 'IoHelpCircle', rarity: 'normal' };
+                } else {
+                    // その他のエラー
+                    throw new Error(itemError.message || 'アイテム獲得に失敗しました');
+                }
             } else {
-                // アイテムがなかった場合 (デバッグ用アラートなど)
-                alert("アイテムは見つからなかったみたい…");
+                const item = await itemResponse.json();
+                obtainedItemData = {
+                    id: item.id, // ★ id を含める
+                    name: item.name,
+                    iconName: item.iconName,
+                    rarity: item.rarity,
+                };
             }
+
+            setNewItem(obtainedItemData); // ★ 取得した(またはフォールバックの)アイテムを State にセット
+
+            // 2. コレクションに記録 (アイテム獲得成功時のみ = id がある時)
+            if (obtainedItemData.id !== null) {
+                await fetch('/api/collection', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ itemId: obtainedItemData.id }),
+                });
+            }
+
+            // 3. おさんぽ回数を記録 (アイテム獲得の成否に関わらず実行)
+            await fetch('/api/walk/complete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ weather: walkWeather }), // ★ APIに合わせて weather を渡す
+            });
+
+            // 4. モーダルを表示
+            setIsItemGetModalOpen(true);
 
         } catch (err) {
             console.error(err);
-            // エラー時も /walk にフォールバック (必要に応じて)
-            // router.push(`/walk?weather=${walkWeather}`);
+            // ★ エラー時はアラートを表示（デプロイ先ではデバッグが難しいため）
             alert("エラーが発生しました: " + (err as Error).message);
         }
+        // --- ▲▲▲ 修正ここまで ▲▲▲ ---
     };
 
 
