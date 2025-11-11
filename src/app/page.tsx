@@ -102,17 +102,21 @@ async function getInitialWeatherData(lat: string, lon: string) {
 
 // page.tsxはサーバーコンポーネント
 export default async function TenChanHomePage() {
-    const headersList = headers();
-
+    // --- ▼▼▼ 変更点 ▼▼▼ ---
+    // サーバーサイドでのデータ取得を無効化し、クライアントに処理を任せる
+    // const headersList = headers();
     // Vercel環境でIPから緯度経度を取得 (ローカルでは大阪にフォールバック)
-    const lat = headersList.get('x-vercel-ip-latitude') || '34.6864';
-    const lon = headersList.get('x-vercel-ip-longitude') || '135.5200';
-
+    // const lat = headersList.get('x-vercel-ip-latitude') || '34.6864';
+    // const lon = headersList.get('x-vercel-ip-longitude') || '135.5200';
     // サーバーサイドで初期データを取得
-    const initialWeatherData = await getInitialWeatherData(lat, lon);
+    // const initialWeatherData = await getInitialWeatherData(lat, lon);
+    // --- ▲▲▲ 変更点ここまで ▲▲▲ ---
+
 
     return (
-        // 取得した初期データをクライアントコンポーネントに渡す
-        <TenChanHomeClient initialData={initialWeatherData} />
+        // --- ▼▼▼ 変更点 ▼▼▼ ---
+        // クライアントコンポーネントに `null` を渡し、クライアント側での取得を強制する
+        <TenChanHomeClient initialData={null} />
+        // --- ▲▲▲ 変更点ここまで ▲▲▲ ---
     );
 }
