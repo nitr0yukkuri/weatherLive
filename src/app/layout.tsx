@@ -25,6 +25,10 @@ export const metadata: Metadata = {
         // },
     },
     // --- ▲▲▲ ファビコン設定ここまで ▲▲▲ ---
+
+    // --- ▼▼▼ 変更点 (PWA対応) ▼▼▼ ---
+    manifest: "/manifest.json",
+    // --- ▲▲▲ 変更点ここまで ▲▲▲ ---
 };
 
 
