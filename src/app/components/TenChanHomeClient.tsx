@@ -18,6 +18,7 @@ type TimeOfDay = "morning" | "afternoon" | "evening" | "night";
 // --- ▼▼▼ 変更点1: キー定義を修正 ▼▼▼ ---
 const PET_NAME_STORAGE_KEY = 'otenki-gurashi-petName';
 const PET_COLOR_STORAGE_KEY = 'otenki-gurashi-petColor'; // ★ 色のキー
+const PET_EQUIPMENT_KEY = 'otenki-gurashi-petEquipment'; // ★ 着せ替え用キー
 const CURRENT_WEATHER_KEY = 'currentWeather';
 const PET_SETTINGS_CHANGED_EVENT = 'petSettingsChanged'; // ★ 設定変更イベント
 // --- ▲▲▲ 変更点1ここまで ▲▲▲ ---
@@ -88,9 +89,10 @@ export default function TenChanHomeClient({ initialData }) {
     const [weather, setWeather] = useState<WeatherType | null>(null);
     const [currentTime, setCurrentTime] = useState(new Date());
     const [temperature, setTemperature] = useState<number | null>(null);
-    // --- ▼▼▼ 変更点2: 色の State を追加 ▼▼▼ ---
+    // --- ▼▼▼ 変更点2: 色と装備の State を追加 ▼▼▼ ---
     const [petName, setPetName] = useState<string>("てんちゃん");
-    const [petColor, setPetColor] = useState<string>("white"); // ★ 色の State
+    const [petColor, setPetColor] = useState<string>("white");
+    const [petEquipment, setPetEquipment] = useState<string | null>(null); // ★ 装備 State
     // --- ▲▲▲ 変更点2ここまで ▲▲▲ ---
     const [location, setLocation] = useState<string | null>("場所を取得中...");
     const [isClient, setIsClient] = useState(false);
@@ -148,7 +150,7 @@ export default function TenChanHomeClient({ initialData }) {
         setError(null);
         setIsLoading(true);
 
-        // ★ 名前と色を読み込む関数
+        // ★ 名前・色・装備を読み込む関数
         const updatePetSettings = () => {
             const storedName = localStorage.getItem(PET_NAME_STORAGE_KEY);
             if (storedName) {
@@ -158,6 +160,9 @@ export default function TenChanHomeClient({ initialData }) {
             if (storedColor) {
                 setPetColor(storedColor);
             }
+            // ★ 装備を読み込む
+            const storedEquipment = localStorage.getItem(PET_EQUIPMENT_KEY);
+            setPetEquipment(storedEquipment); // nullでもそのままセット
         };
 
         // ★ 1. マウント時に設定を読み込む
@@ -334,10 +339,11 @@ export default function TenChanHomeClient({ initialData }) {
                         </div>
                     </div>
                 ) : (
-                    // --- ▼▼▼ 変更点4: petColor を渡す ▼▼▼ ---
+                    // --- ▼▼▼ 変更点4: petColor と petEquipment を渡す ▼▼▼ ---
                     <CharacterDisplay
                         petName={petName}
                         petColor={petColor}
+                        petEquipment={petEquipment}
                         mood={error ? "sad" : "happy"}
                         message={message}
                         onCharacterClick={handleCharacterClick}

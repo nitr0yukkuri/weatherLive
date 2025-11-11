@@ -4,25 +4,45 @@
 
 import Link from 'next/link';
 import Footer from '../components/Footer';
-import { IoSettingsSharp, IoCheckmark } from 'react-icons/io5'; // ★ IoCheckmark をインポート
+import { IoSettingsSharp, IoCheckmark, IoBan } from 'react-icons/io5';
 import React, { useState, useEffect } from 'react';
+import { FaHatCowboy } from 'react-icons/fa'; // ★ アイコンをインポート
 
-// --- ▼▼▼ 変更点1: キーと色の定義を追加 ▼▼▼ ---
+// --- ▼▼▼ 変更点1: キー定義、型定義を追加 ▼▼▼ ---
 type WeatherType = "sunny" | "clear" | "rainy" | "cloudy" | "snowy" | "thunderstorm" | "windy" | "night";
-const CURRENT_WEATHER_KEY = 'currentWeather'; // localStorage キー
+const CURRENT_WEATHER_KEY = 'currentWeather';
 const PET_NAME_STORAGE_KEY = 'otenki-gurashi-petName';
-const PET_COLOR_STORAGE_KEY = 'otenki-gurashi-petColor'; // ★ 新しいキー
-const PET_SETTINGS_CHANGED_EVENT = 'petSettingsChanged'; // ★ カスタムイベント名
+const PET_COLOR_STORAGE_KEY = 'otenki-gurashi-petColor';
+const PET_EQUIPMENT_KEY = 'otenki-gurashi-petEquipment'; // ★ 着せ替え用キー
+const PET_SETTINGS_CHANGED_EVENT = 'petSettingsChanged';
 
 // ★ 色の選択肢
 const colorOptions = [
     { name: 'しろ', value: 'white' },
-    { name: 'さくら', value: '#FCE4EC' }, // やさしいピンク
-    { name: 'ひよこ', value: '#FFF9C4' }, // やさしい黄色
-    { name: 'みず', value: '#E0F7FA' },   // やさしい水色
+    { name: 'さくら', value: '#FCE4EC' },
+    { name: 'ひよこ', value: '#FFF9C4' },
+    { name: 'みず', value: '#E0F7FA' },
+];
+
+// ★ CollectionItemの型定義 (collection/page.tsx と同じ)
+interface CollectionItem {
+    id: number;
+    name: string;
+    description: string;
+    iconName: string | null;
+    quantity: number;
+    rarity: string;
+    weather: string | null;
+}
+
+// ★ 着せ替えアイテムの定義 (iconNameで管理)
+const equipmentOptions = [
+    { name: 'なし', iconName: null, icon: <IoBan size={28} /> },
+    { name: 'ぼうし', iconName: 'FaHatCowboy', icon: <FaHatCowboy size={28} /> },
 ];
 
 const getBackgroundGradientClass = (weather: WeatherType | null): string => {
+    // --- (中略: getBackgroundGradientClassは変更なし) ---
     switch (weather) {
         case 'clear': return 'bg-clear';
         case 'cloudy': return 'bg-cloudy';
@@ -45,74 +65,99 @@ export default function SettingsPage() {
     const [petName, setPetName] = useState("てんちゃん");
     const [isEditingName, setIsEditingName] = useState(false);
     const [editingName, setEditingName] = useState("");
-
-    // --- ▼▼▼ 変更点2: 色の State を追加 ▼▼▼ ---
     const [petColor, setPetColor] = useState('white');
+
+    // --- ▼▼▼ 変更点2: きせかえ関連の State を追加 ▼▼▼ ---
+    const [equipment, setEquipment] = useState<string | null>(null);
+    const [ownedItems, setOwnedItems] = useState<CollectionItem[]>([]);
+    const [loadingCollection, setLoadingCollection] = useState(true);
     // --- ▲▲▲ 変更点2ここまで ▲▲▲ ---
 
-    // --- ▼▼▼ 変更点3: 色も読み込むように変更 ▼▼▼ ---
+    // --- ▼▼▼ 変更点3: 色と装備も読み込むように変更 ▼▼▼ ---
     useEffect(() => {
-        // 名前を読み込む
         const storedName = localStorage.getItem(PET_NAME_STORAGE_KEY);
         if (storedName) {
             setPetName(storedName);
         }
-
-        // ★ 色を読み込む (追加)
         const storedColor = localStorage.getItem(PET_COLOR_STORAGE_KEY);
         if (storedColor) {
             setPetColor(storedColor);
         }
+        // ★ 装備を読み込む (追加)
+        const storedEquipment = localStorage.getItem(PET_EQUIPMENT_KEY);
+        if (storedEquipment) {
+            setEquipment(storedEquipment);
+        }
 
-        // 背景色をセットする処理
         const storedWeather = localStorage.getItem(CURRENT_WEATHER_KEY) as WeatherType | null;
         setDynamicBackgroundClass(getBackgroundGradientClass(storedWeather));
+
+        // ★ 所持アイテムをフェッチ (追加)
+        const fetchCollection = async () => {
+            try {
+                setLoadingCollection(true);
+                const response = await fetch('/api/collection');
+                const data: CollectionItem[] = await response.json();
+                // 所持しているアイテムのみをフィルタリング
+                setOwnedItems(data.filter(item => item.quantity > 0));
+            } catch (error) {
+                console.error("コレクションの取得に失敗しました", error);
+            } finally {
+                setLoadingCollection(false);
+            }
+        };
+        fetchCollection();
     }, []);
     // --- ▲▲▲ 変更点3ここまで ▲▲▲ ---
 
+    // --- (中略: 音量、名前変更ハンドラは変更なし) ---
     const handleVolumeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setVolume(Number(event.target.value));
     };
-
     const handleSoundEffectVolumeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSoundEffectVolume(Number(event.target.value));
     };
-
     const handleNameChangeClick = () => {
         setEditingName(petName);
         setIsEditingName(true);
     };
-
     const handleEditingNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setEditingName(event.target.value);
     };
-
-    // ★ 共通のイベント発火関数
     const notifySettingsChanged = () => {
         window.dispatchEvent(new CustomEvent(PET_SETTINGS_CHANGED_EVENT));
     };
-
     const handleSaveName = () => {
         const newName = editingName.trim();
         if (newName) {
             setPetName(newName);
             localStorage.setItem(PET_NAME_STORAGE_KEY, newName);
             setIsEditingName(false);
-            notifySettingsChanged(); // ★ イベント発火
+            notifySettingsChanged();
         } else {
             alert("名前を入力してください。");
         }
     };
-
     const handleCancelEditName = () => {
         setIsEditingName(false);
     };
-
-    // --- ▼▼▼ 変更点4: 色選択ハンドラを追加 ▼▼▼ ---
     const handleColorSelect = (colorValue: string) => {
-        setPetColor(colorValue); // 1. Stateを更新
-        localStorage.setItem(PET_COLOR_STORAGE_KEY, colorValue); // 2. localStorageに保存
-        notifySettingsChanged(); // 3. ★ イベント発火
+        setPetColor(colorValue);
+        localStorage.setItem(PET_COLOR_STORAGE_KEY, colorValue);
+        notifySettingsChanged();
+    };
+    // --- (中略ここまで) ---
+
+    // --- ▼▼▼ 変更点4: 装備選択ハンドラを追加 ▼▼▼ ---
+    const handleEquipmentSelect = (iconName: string | null) => {
+        const newEquipment = iconName;
+        setEquipment(newEquipment);
+        if (newEquipment) {
+            localStorage.setItem(PET_EQUIPMENT_KEY, newEquipment);
+        } else {
+            localStorage.removeItem(PET_EQUIPMENT_KEY); //「なし」の場合はキーを削除
+        }
+        notifySettingsChanged();
     };
     // --- ▲▲▲ 変更点4ここまで ▲▲▲ ---
 
@@ -120,19 +165,16 @@ export default function SettingsPage() {
     return (
         <div className="w-full min-h-screen bg-gray-200 flex items-center justify-center p-4">
             <main className={`w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col text-slate-700 ${dynamicBackgroundClass}`}>
+                {/* (中略: ヘッダー、名前セクション、色セクションは変更なし) */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-black/80 rounded-b-xl z-10"></div>
-
                 <div className="flex-grow overflow-y-auto p-6">
                     <Link href="/" className="text-slate-500 mb-6 inline-block text-sm font-semibold hover:text-slate-700 transition-colors">← もどる</Link>
-
                     <header className="mb-8">
                         <h1 className="text-4xl font-extrabold text-slate-800 tracking-wider flex items-center gap-2 backdrop-blur-sm bg-white/30 rounded-lg px-4 py-1">
                             設定
                             <IoSettingsSharp size={28} className="text-slate-500" />
                         </h1>
                     </header>
-
-                    {/* --- ペットの名前セクション (変更なし) --- */}
                     <section className="mb-8 bg-white/60 backdrop-blur-sm rounded-2xl p-4">
                         <h2 className="text-lg font-semibold text-slate-600 mb-3">ペットの名前</h2>
                         {isEditingName ? (
@@ -162,8 +204,6 @@ export default function SettingsPage() {
                             </div>
                         )}
                     </section>
-
-                    {/* --- ▼▼▼ 変更点5: 色選択セクションを追加 ▼▼▼ --- */}
                     <section className="mb-8 bg-white/60 backdrop-blur-sm rounded-2xl p-4">
                         <h2 className="text-lg font-semibold text-slate-600 mb-3">ペットのいろ</h2>
                         <div className="flex justify-around items-center gap-2">
@@ -177,10 +217,9 @@ export default function SettingsPage() {
                                         className="w-12 h-12 rounded-full border-2 shadow-inner"
                                         style={{
                                             backgroundColor: color.value,
-                                            borderColor: petColor === color.value ? '#0ea5e9' : '#ffffff' // 選択中ならスカイブルーの枠
+                                            borderColor: petColor === color.value ? '#0ea5e9' : '#ffffff'
                                         }}
                                     >
-                                        {/* 選択中のチェックマーク */}
                                         {petColor === color.value && (
                                             <div className="w-full h-full flex items-center justify-center text-sky-600">
                                                 <IoCheckmark size={28} />
@@ -192,7 +231,67 @@ export default function SettingsPage() {
                             ))}
                         </div>
                     </section>
+
+                    {/* --- ▼▼▼ 変更点5: きせかえセクションを変更 ▼▼▼ --- */}
+                    <section className="mb-8 bg-white/60 backdrop-blur-sm rounded-2xl p-4">
+                        <h2 className="text-lg font-semibold text-slate-600 mb-3">きせかえ</h2>
+                        {loadingCollection ? (
+                            <p className="text-xs text-slate-500 text-center animate-pulse">所持アイテムを確認中...</p>
+                        ) : (
+                            <div className="flex justify-around items-center gap-2">
+                                {equipmentOptions.map(option => {
+                                    // 「なし」ボタンは常に有効
+                                    if (option.iconName === null) {
+                                        return (
+                                            <button
+                                                key="none"
+                                                onClick={() => handleEquipmentSelect(null)}
+                                                className="flex flex-col items-center gap-1 transition-transform hover:scale-105 active:scale-95"
+                                            >
+                                                <div
+                                                    className={`w-12 h-12 rounded-full border-2 shadow-inner flex items-center justify-center text-slate-500`}
+                                                    style={{
+                                                        backgroundColor: 'white',
+                                                        borderColor: equipment === null ? '#0ea5e9' : '#ffffff'
+                                                    }}
+                                                >
+                                                    {option.icon}
+                                                </div>
+                                                <span className="text-xs font-medium text-slate-600">{option.name}</span>
+                                            </button>
+                                        );
+                                    }
+
+                                    // アイテムを持っているか確認
+                                    const hasItem = ownedItems.some(item => item.iconName === option.iconName);
+
+                                    return (
+                                        <button
+                                            key={option.iconName}
+                                            onClick={() => handleEquipmentSelect(option.iconName)}
+                                            disabled={!hasItem} // ★ 所持していなければ無効
+                                            className="flex flex-col items-center gap-1 transition-transform hover:scale-105 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                                        >
+                                            <div
+                                                className={`w-12 h-12 rounded-full border-2 shadow-inner flex items-center justify-center ${hasItem ? 'text-slate-700' : 'text-slate-400'}`}
+                                                style={{
+                                                    backgroundColor: 'white',
+                                                    borderColor: equipment === option.iconName ? '#0ea5e9' : '#ffffff'
+                                                }}
+                                            >
+                                                {option.icon}
+                                            </div>
+                                            <span className={`text-xs font-medium ${hasItem ? 'text-slate-600' : 'text-slate-400'}`}>
+                                                {hasItem ? option.name : '？？？'}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </section>
                     {/* --- ▲▲▲ 変更点5ここまで ▲▲▲ --- */}
+
 
                     {/* --- 音量設定セクション (変更なし) --- */}
                     <section className="bg-white/60 backdrop-blur-sm rounded-2xl p-4">
