@@ -22,7 +22,7 @@ export default function WeatherPage() {
         selectedDayMessage,
         handleCardClick,
         dynamicBackgroundClass,
-        isNight // ★ 前回の修正 (isNight) も反映済み
+        isNight // ★ (isNight) も反映済み
     } = useWeatherForecast();
 
     // ★ 夜間用の色クラスを定義
@@ -67,8 +67,7 @@ export default function WeatherPage() {
                             ) : error ? (
                                 <p className="w-full text-center text-red-500 bg-red-100 p-3 rounded-lg">{error}</p>
                             ) : (
-                                // ★★★ 変更点: onClick の渡し方を修正 ★★★
-                                // () => handleCardClick(data) から handleCardClick に変更
+                                // ★ (onClick={handleCardClick} の型エラーは解消済みと仮定)
                                 forecast.map((data: Forecast, index: number) => (
                                     <ForecastCard
                                         key={index}
@@ -76,14 +75,13 @@ export default function WeatherPage() {
                                         onClick={handleCardClick}
                                     />
                                 ))
-                                // ★★★ 変更ここまで ★★★
                             )}
                         </div>
                     </div>
                 </div>
 
-                {/* ★ フッターに isNight を渡す */}
-                <Footer isNight={isNight} />
+                {/* ★★★ 変更点: フッターから isNight={isNight} プロパティを削除 ★★★ */}
+                <Footer />
             </main>
         </div>
     );

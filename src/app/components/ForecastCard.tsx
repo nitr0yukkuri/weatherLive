@@ -1,4 +1,20 @@
+'use client';
+
 import WeatherIcon from './WeatherIcon';
+
+// ★★★ 変更点 1: Forecast 型の定義（またはインポート）が必要 ★★★
+// このコンポーネントが Forecast 型を知らないため、
+// useWeatherForecast.ts からインポートするか、ここで定義します。
+// ここでは、useWeatherForecast.ts の定義と一致させます。
+interface Forecast {
+    day: string;
+    date: string;
+    weather: string;
+    high: number;
+    low: number;
+    pop: number;
+}
+// ★★★ 変更ここまで ★★★
 
 interface ForecastCardProps {
     day: string;
@@ -7,8 +23,8 @@ interface ForecastCardProps {
     high: number;
     low: number;
     pop: number;
-    // ★ 1. クリックハンドラが天気詳細オブジェクトを受け取るように変更
-    onClick: (data: { day: string; weather: string; high: number; low: number; pop: number }) => void;
+    // ★★★ 変更点 2: onClick の型を Forecast に修正 ★★★
+    onClick: (data: Forecast) => void;
 }
 
 export default function ForecastCard({ day, date, weather, high, low, pop, onClick }: ForecastCardProps) {
@@ -20,15 +36,18 @@ export default function ForecastCard({ day, date, weather, high, low, pop, onCli
             case 'rainy': return '雨';
             case 'snowy': return '雪';
             case 'night': return '夜';
+            // ★ windy, thunderstorm も追加
+            case 'windy': return '強風';
+            case 'thunderstorm': return '雷雨';
             default: return '晴れ';
         }
     };
 
-    // ★ 2. クリック時に渡すデータをオブジェクトとして用意
-    const cardData = { day, weather, high, low, pop };
+    // ★★★ 変更点 3: cardData に `date` プロパティを追加して Forecast 型と一致させる ★★★
+    const cardData = { day, date, weather, high, low, pop };
 
     return (
-        // ★ 3. focus:ring-pink-300 を focus:ring-sky-400 に変更し、フォーカス時の外枠の色を青系にしました
+        // ★★★ 変更点 4: onClick に cardData を渡すように修正 ★★★
         <button
             onClick={() => onClick(cardData)}
             className="flex-shrink-0 w-32 text-center p-4 bg-white/40 backdrop-blur-md rounded-[2rem] shadow-lg flex flex-col items-center transition-transform active:scale-[0.98] cursor-pointer hover:bg-white/60 focus:outline-none focus:ring-2 focus:ring-sky-400"
