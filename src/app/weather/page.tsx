@@ -220,22 +220,40 @@ export default function WeatherPage() {
             }
         };
 
-        // Geolocationロジック
+        // ★★★ 変更点: Geolocationロジックのエラーメッセージを修正 ★★★
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => fetchWeatherData(position.coords.latitude, position.coords.longitude),
-                () => {
-                    setLocation("位置情報が取得できませんでした");
-                    setError("位置情報の取得を許可してください。");
+                (geoError) => { // ★ エラーオブジェクトを受け取る
+                    console.error("Geolocation Error:", geoError);
+                    let errorMessage = "あれれ、いまどこにいるか分かんなくなっちゃった…";
+                    let message = "いまどこにいるか分かれば、お天気を調べられるよ！";
+
+                    if (geoError.code === geoError.PERMISSION_DENIED) {
+                        errorMessage = "いまどこにいるか、教えてほしいな！\n（ブラウザの設定を確認してみてね）";
+                        message = "いまどこにいるか教えてくれたら、お天気予報をお届けするね。";
+                    } else if (geoError.code === geoError.POSITION_UNAVAILABLE) {
+                        errorMessage = "うーん、いまいる場所がうまく掴めないみたい…";
+                        message = "うまく場所が掴めないみたい…。もう一度試してみてね。";
+                    } else if (geoError.code === geoError.TIMEOUT) {
+                        errorMessage = "場所を探すのに時間がかかっちゃった…\nもう一回試してみて！";
+                        message = "場所を探すのに時間がかかっちゃったみたい。";
+                    }
+
+                    setLocation("？？？");
+                    setError(errorMessage);
                     setLoading(false);
-                    setSelectedDayMessage("位置情報の取得を許可してね...");
-                }
+                    setSelectedDayMessage(message);
+                },
+                { timeout: 10000 } // タイムアウトを設定
             );
         } else {
-            setLocation("位置情報機能が利用できません");
+            setLocation("？？？");
+            setError("ごめんね、このアプリだと\nいまどこにいるかの機能が使えないみたい…");
             setLoading(false);
-            setSelectedDayMessage("この端末では位置情報機能が利用できません。");
+            setSelectedDayMessage("うーん、このアプリだと場所がわからないみたい…");
         }
+        // ★★★ 変更ここまで ★★★
     }, [handleInitialMessage]);
 
 
