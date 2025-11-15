@@ -31,6 +31,8 @@ export function useWalkLogic() {
     const hasStartedProcessing = useRef(false);
 
     const dynamicBackgroundClass = useMemo(() => getBackgroundColorClass(weather || undefined), [weather]);
+    // ★★★ 変更点: isNight を useMemo で定義 ★★★
+    const isNight = useMemo(() => weather === 'night', [weather]);
 
     useEffect(() => {
         if (hasStartedProcessing.current || isProcessing) return;
@@ -186,5 +188,6 @@ export function useWalkLogic() {
         isItemModalOpen,
         dynamicBackgroundClass,
         handleModalClose,
+        isNight, // ★★★ 変更点: isNight を返す ★★★
     };
 }
