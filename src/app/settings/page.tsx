@@ -60,6 +60,8 @@ const getBackgroundGradientClass = (weather: WeatherType | null): string => {
 
 export default function SettingsPage() {
     const [dynamicBackgroundClass, setDynamicBackgroundClass] = useState('bg-sunny');
+    // ★★★ 変更点: isNight State を追加 ★★★
+    const [isNight, setIsNight] = useState(false);
     const [volume, setVolume] = useState(70);
     const [soundEffectVolume, setSoundEffectVolume] = useState(50);
     const [petName, setPetName] = useState("てんちゃん");
@@ -91,6 +93,8 @@ export default function SettingsPage() {
 
         const storedWeather = localStorage.getItem(CURRENT_WEATHER_KEY) as WeatherType | null;
         setDynamicBackgroundClass(getBackgroundGradientClass(storedWeather));
+        // ★★★ 変更点: isNight をセット ★★★
+        setIsNight(storedWeather === 'night');
 
         // ★ 所持アイテムをフェッチ (追加)
         const fetchCollection = async () => {
@@ -162,19 +166,30 @@ export default function SettingsPage() {
     // --- ▲▲▲ 変更点4ここまで ▲▲▲ ---
 
 
+    // ★★★ 変更点: 夜間用のリンク色 ★★★
+    const linkColor = isNight ? 'text-gray-300 hover:text-white' : 'text-slate-500 hover:text-slate-700';
+    // ★★★ 変更点: 夜間用のタイトルとアイコン色 ★★★
+    const titleColor = isNight ? 'text-white' : 'text-slate-800';
+    const titleIconColor = isNight ? 'text-gray-300' : 'text-slate-500';
+
     return (
         <div className="w-full min-h-screen bg-gray-200 flex items-center justify-center p-4">
-            <main className={`w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col text-slate-700 ${dynamicBackgroundClass}`}>
+            {/* ★★★ 変更点: main の文字色を動的に ★★★ */}
+            <main className={`w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col ${isNight ? 'text-white' : ''} ${dynamicBackgroundClass}`}>
                 {/* (中略: ヘッダー、名前セクション、色セクションは変更なし) */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-black/80 rounded-b-xl z-10"></div>
                 <div className="flex-grow overflow-y-auto p-6">
-                    <Link href="/" className="text-slate-500 mb-6 inline-block text-sm font-semibold hover:text-slate-700 transition-colors">← もどる</Link>
+                    {/* ★★★ 変更点: linkColor を適用 ★★★ */}
+                    <Link href="/" className={`mb-6 inline-block text-sm font-semibold ${linkColor} transition-colors`}>← もどる</Link>
                     <header className="mb-8">
-                        <h1 className="text-4xl font-extrabold text-slate-800 tracking-wider flex items-center gap-2 backdrop-blur-sm bg-white/30 rounded-lg px-4 py-1">
+                        {/* ★★★ 変更点: titleColor を適用 ★★★ */}
+                        <h1 className={`text-4xl font-extrabold ${titleColor} tracking-wider flex items-center gap-2 backdrop-blur-sm bg-white/30 rounded-lg px-4 py-1`}>
                             設定
-                            <IoSettingsSharp size={28} className="text-slate-500" />
+                            {/* ★★★ 変更点: titleIconColor を適用 ★★★ */}
+                            <IoSettingsSharp size={28} className={titleIconColor} />
                         </h1>
                     </header>
+                    {/* ★★★ 変更点: パネル内の文字色は変更しない (白背景のため) ★★★ */}
                     <section className="mb-8 bg-white/60 backdrop-blur-sm rounded-2xl p-4">
                         <h2 className="text-lg font-semibold text-slate-600 mb-3">ペットの名前</h2>
                         {isEditingName ? (
@@ -204,6 +219,7 @@ export default function SettingsPage() {
                             </div>
                         )}
                     </section>
+                    {/* ★★★ 変更点: パネル内の文字色は変更しない (白背景のため) ★★★ */}
                     <section className="mb-8 bg-white/60 backdrop-blur-sm rounded-2xl p-4">
                         <h2 className="text-lg font-semibold text-slate-600 mb-3">ペットのいろ</h2>
                         <div className="flex justify-around items-center gap-2">
@@ -233,6 +249,7 @@ export default function SettingsPage() {
                     </section>
 
                     {/* --- ▼▼▼ 変更点5: きせかえセクションを変更 ▼▼▼ --- */}
+                    {/* ★★★ 変更点: パネル内の文字色は変更しない (白背景のため) ★★★ */}
                     <section className="mb-8 bg-white/60 backdrop-blur-sm rounded-2xl p-4">
                         <h2 className="text-lg font-semibold text-slate-600 mb-3">きせかえ</h2>
                         {loadingCollection ? (
@@ -294,6 +311,7 @@ export default function SettingsPage() {
 
 
                     {/* --- 音量設定セクション (変更なし) --- */}
+                    {/* ★★★ 変更点: パネル内の文字色は変更しない (白背景のため) ★★★ */}
                     <section className="bg-white/60 backdrop-blur-sm rounded-2xl p-4">
                         <h2 className="text-lg font-semibold text-slate-600 mb-4">音量設定</h2>
                         <div className="space-y-6">

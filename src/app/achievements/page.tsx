@@ -333,6 +333,9 @@ export default function AchievementsPage() {
     // ★★★ 変更点: 夜間用のリンクとサブタイトル色 ★★★
     const linkColor = isNight ? 'text-gray-300 hover:text-white' : 'text-slate-500 hover:text-slate-700';
     const subTitleColor = isNight ? 'text-gray-300' : 'text-slate-500';
+    // ★★★ 変更点: 夜間用のタイトルとアイコン色 ★★★
+    const titleColor = isNight ? 'text-white' : 'text-slate-800';
+    const titleIconColor = isNight ? 'text-gray-300' : 'text-slate-500';
 
     return (
         <div className="w-full min-h-screen bg-gray-200 flex items-center justify-center p-4">
@@ -354,10 +357,11 @@ export default function AchievementsPage() {
                     <header className="mb-8">
                         {/* ★★★ 変更点: linkColor を適用 ★★★ */}
                         <Link href="/" className={`mb-6 inline-block text-sm ${linkColor} transition-colors`}>← もどる</Link>
-                        {/* ★★★ 変更点: パネル内の文字色は変更しない ★★★ */}
-                        <h1 className="text-4xl font-extrabold text-slate-800 tracking-wider flex items-center gap-2 backdrop-blur-sm bg-white/30 rounded-lg px-4 py-1">
+                        {/* ★★★ 変更点: titleColor を適用 ★★★ */}
+                        <h1 className={`text-4xl font-extrabold ${titleColor} tracking-wider flex items-center gap-2 backdrop-blur-sm bg-white/30 rounded-lg px-4 py-1`}>
                             実績
-                            <FaTrophy size={28} className="text-slate-500" />
+                            {/* ★★★ 変更点: titleIconColor を適用 ★★★ */}
+                            <FaTrophy size={28} className={titleIconColor} />
                         </h1>
                         {/* ★★★ 変更点: subTitleColor を適用 ★★★ */}
                         <p className={`${subTitleColor} mt-1`}>てんちゃんとの思い出を見てみよう</p>
