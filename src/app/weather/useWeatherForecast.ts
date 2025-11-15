@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 // 共通の型定義とヘルパー関数をインポート
 import { WeatherType, mapWeatherType, getTimeOfDay } from '../lib/weatherUtils';
-// ★ 変更点 1: ヘルパー関数を別ファイルからインポート
+// ★ ヘルパー関数を別ファイルからインポート
 import {
     getBackgroundColorClass,
     generateAdviceMessage
@@ -26,12 +26,9 @@ interface DailyData {
     temps: number[];
     pops: number[];
     weathers: string[];
+    // ★★★ 変更点: 3時間ごとの item データを保持する配列を追加 ★★★
+    items: any[];
 }
-
-// ===================================
-// ★ 変更点 2: フック内部のヘルパー関数を削除
-// (getWeatherText, getBackgroundColorClass, generateAdviceMessage を削除)
-// ===================================
 
 
 // ===================================
@@ -51,7 +48,7 @@ export function useWeatherForecast() {
     const handleInitialMessage = useCallback((data: Forecast[]) => {
         if (data.length > 0) {
             const todayData = data[0];
-            // ★ 変更点 3: インポートした関数を使用
+            // ★ インポートした関数を使用
             const initialMessage = generateAdviceMessage(todayData, 0);
             setSelectedDayMessage(initialMessage);
             setMessageIndex(1);
@@ -59,7 +56,7 @@ export function useWeatherForecast() {
     }, []);
 
     const handleCardClick = useCallback((data: { day: string; weather: string; high: number; low: number; pop: number }) => {
-        // ★ 変更点 4: インポートした関数を使用
+        // ★ インポートした関数を使用
         const message = generateAdviceMessage(data, messageIndex);
         setSelectedDayMessage(message);
         setMessageIndex(prevIndex => (prevIndex + 1));
@@ -83,12 +80,15 @@ export function useWeatherForecast() {
                 data.list.forEach((item: any) => {
                     const date = new Date(item.dt * 1000).toLocaleDateString('ja-JP');
                     if (!dailyForecasts.has(date)) {
-                        dailyForecasts.set(date, { temps: [], pops: [], weathers: [] });
+                        // ★★★ 変更点: items を初期化 ★★★
+                        dailyForecasts.set(date, { temps: [], pops: [], weathers: [], items: [] });
                     }
                     const dayData = dailyForecasts.get(date)!;
                     dayData.temps.push(item.main.temp);
                     dayData.pops.push(item.pop);
                     dayData.weathers.push(item.weather[0].main);
+                    // ★★★ 変更点: item全体を格納 ★★★
+                    dayData.items.push(item);
                 });
 
                 // ★ インポートした getTimeOfDay を使用
@@ -99,13 +99,32 @@ export function useWeatherForecast() {
                     const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][date.getDay()];
                     let dayLabel = index === 0 ? '今日' : index === 1 ? '明日' : `${date.getMonth() + 1}/${date.getDate()}`;
 
-                    // ★ インポートした mapWeatherType を使用
-                    // (元のロジックを維持：雨が最優先、それ以外はmapWeatherType)
-                    let weather: WeatherType | string = dailyData.weathers.some(w => w.toLowerCase().includes('rain')) ? 'rainy' : mapWeatherType({ weather: [{ main: dailyData.weathers[0] }] });
+                    // ★★★ 変更点: その日の天気を決定するロジックを改善 ★★★
 
+                    // 1. その日の3時間ごと予報(items)の中で、最も優先度の高い天気を採用する
+                    //    (雷雨 > 強風 > 雨/雪 > ... の順で mapWeatherType が判定する)
+
+                    //    簡略化のため、その日の最初の予報(items[0])を代表の天気とする。
+                    //    これにより、mapWeatherType が windSpeed も見れるようになる。
+                    let representativeItem = dailyData.items[0] || { weather: [{ main: "Clear" }] }; // デフォルト
+
+                    // 2. ただし、元のロジックにあった「その日一度でも雨が降るか」の判定は維持する
+                    const hasRain = dailyData.weathers.some(w => w.toLowerCase().includes('rain'));
+
+                    // ★ 変更点: mapWeatherType に item を丸ごと渡す
+                    let weather: WeatherType | string = mapWeatherType(representativeItem);
+
+                    // 3. もし mapWeatherType が 'rainy' 以外を返したが、
+                    //    その日のどこかで雨が降る (hasRain) なら 'rainy' に上書きする
+                    if (hasRain && weather !== 'rainy' && weather !== 'thunderstorm') {
+                        weather = 'rainy';
+                    }
+
+                    // 4. 今日の予報が夜の場合の処理
                     if (index === 0 && (weather === 'sunny' || weather === 'clear') && timeOfDay === 'night') {
                         weather = 'night';
                     }
+                    // ★★★ 変更ここまで ★★★
 
                     return {
                         day: dayLabel, date: dayOfWeek, weather: weather,
@@ -164,8 +183,11 @@ export function useWeatherForecast() {
 
     // --- UI（ビュー）に必要な値を計算 ---
     const todayWeather = useMemo(() => (forecast.length > 0 ? forecast[0].weather : undefined), [forecast]);
-    // ★ 変更点 5: インポートした関数を使用
+    // ★ インポートした関数を使用
     const dynamicBackgroundClass = useMemo(() => getBackgroundColorClass(todayWeather), [todayWeather]);
+
+    // ★★★ 変更点: isNight を計算 ★★★
+    const isNight = useMemo(() => todayWeather === 'night', [todayWeather]);
 
     // --- コンポーネントに渡す値を返す ---
     return {
@@ -175,6 +197,7 @@ export function useWeatherForecast() {
         error,
         selectedDayMessage,
         handleCardClick,
-        dynamicBackgroundClass
+        dynamicBackgroundClass,
+        isNight, // ★★★ 変更点: isNight を返す ★★★
     };
 }
