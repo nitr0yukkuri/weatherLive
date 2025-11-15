@@ -282,6 +282,8 @@ export default function TenChanHomeClient({ initialData }) {
 
     const displayWeatherType = weather || 'sunny';
     const dynamicBackgroundClass = getBackgroundGradientClass(displayWeatherType);
+    // ★★★ 変更点: isNight を定義 ★★★
+    const isNight = displayWeatherType === 'night';
 
     return (
         <div className="w-full min-h-screen bg-gray-200 flex items-center justify-center p-4">
@@ -309,7 +311,8 @@ export default function TenChanHomeClient({ initialData }) {
             {/* ▲▲▲ 変更ここまで ▲▲▲ */}
 
             <main
-                className={`w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col text-[#5D4037] ${dynamicBackgroundClass} transition-all duration-500`}
+                // ★★★ 変更点: text-[#5D4037] を動的に変更 ★★★
+                className={`w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col ${isNight ? 'text-white' : 'text-[#5D4037]'} ${dynamicBackgroundClass} transition-all duration-500`}
             >
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-black/80 rounded-b-xl"></div>
 
@@ -339,7 +342,7 @@ export default function TenChanHomeClient({ initialData }) {
                         </div>
                     </div>
                 ) : (
-                    // --- ▼▼▼ 変更点4: petColor と petEquipment を渡す ▼▼▼ ---
+                    // --- ▼▼▼ 変更点4: petColor と petEquipment を渡す + isNight を渡す ★★★ ---
                     <CharacterDisplay
                         petName={petName}
                         petColor={petColor}
@@ -347,6 +350,7 @@ export default function TenChanHomeClient({ initialData }) {
                         mood={error ? "sad" : "happy"}
                         message={message}
                         onCharacterClick={handleCharacterClick}
+                        isNight={isNight} // ★★★ 追加
                     />
                     // --- ▲▲▲ 変更点4ここまで ▲▲▲ ---
                 )}

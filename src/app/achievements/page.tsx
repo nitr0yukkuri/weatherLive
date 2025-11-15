@@ -205,6 +205,8 @@ function AchievementDetailModal({ isOpen, onClose, achievement }: AchievementDet
 
 export default function AchievementsPage() {
     const [dynamicBackgroundClass, setDynamicBackgroundClass] = useState('bg-sunny');
+    // ★★★ 変更点: isNight State を追加 ★★★
+    const [isNight, setIsNight] = useState(false);
     const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
     const [achievements, setAchievements] = useState<(Achievement & { progress: number })[]>([]);
     const [loading, setLoading] = useState(true);
@@ -219,6 +221,8 @@ export default function AchievementsPage() {
     useEffect(() => {
         const storedWeather = localStorage.getItem(CURRENT_WEATHER_KEY) as WeatherType | null;
         setDynamicBackgroundClass(getBackgroundGradientClass(storedWeather));
+        // ★★★ 変更点: isNight をセット ★★★
+        setIsNight(storedWeather === 'night');
     }, []);
 
     useEffect(() => {
@@ -265,6 +269,7 @@ export default function AchievementsPage() {
         };
 
         return (
+            // ★★★ 変更点: パネル内の文字色は変更しない (白背景のため) ★★★
             <div className={`p-4 rounded-2xl shadow-lg transition-all
                 ${achievement.isUnlocked ? 'bg-white' : 'bg-white/80 opacity-90'}`}
             >
@@ -325,6 +330,9 @@ export default function AchievementsPage() {
     };
     // --- ▲▲▲ 4. AchievementItem 修正ここまで ▲▲▲ ---
 
+    // ★★★ 変更点: 夜間用のリンクとサブタイトル色 ★★★
+    const linkColor = isNight ? 'text-gray-300 hover:text-white' : 'text-slate-500 hover:text-slate-700';
+    const subTitleColor = isNight ? 'text-gray-300' : 'text-slate-500';
 
     return (
         <div className="w-full min-h-screen bg-gray-200 flex items-center justify-center p-4">
@@ -337,23 +345,28 @@ export default function AchievementsPage() {
             />
             {/* --- ▲▲▲ 5. モーダルレンダリングここまで ▲▲▲ --- */}
 
-            <main className={`w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col text-slate-700 ${dynamicBackgroundClass}`}>
+            {/* ★★★ 変更点: main の文字色を動的に ★★★ */}
+            <main className={`w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col ${isNight ? 'text-white' : 'text-slate-700'} ${dynamicBackgroundClass}`}>
 
                 {/* (ヘッダーなどは変更なし) */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-black/80 rounded-b-xl z-10"></div>
                 <div className="flex-grow overflow-y-auto p-6">
                     <header className="mb-8">
-                        <Link href="/" className="text-slate-500 mb-6 inline-block text-sm hover:text-slate-700 transition-colors">← もどる</Link>
+                        {/* ★★★ 変更点: linkColor を適用 ★★★ */}
+                        <Link href="/" className={`mb-6 inline-block text-sm ${linkColor} transition-colors`}>← もどる</Link>
+                        {/* ★★★ 変更点: パネル内の文字色は変更しない ★★★ */}
                         <h1 className="text-4xl font-extrabold text-slate-800 tracking-wider flex items-center gap-2 backdrop-blur-sm bg-white/30 rounded-lg px-4 py-1">
                             実績
                             <FaTrophy size={28} className="text-slate-500" />
                         </h1>
-                        <p className="text-slate-500 mt-1">てんちゃんとの思い出を見てみよう</p>
+                        {/* ★★★ 変更点: subTitleColor を適用 ★★★ */}
+                        <p className={`${subTitleColor} mt-1`}>てんちゃんとの思い出を見てみよう</p>
                     </header>
 
                     {/* (ローディング・エラー表示も変更なし) */}
                     {loading ? (
-                        <p className="text-center animate-pulse text-slate-500">実績を読み込み中...</p>
+                        // ★★★ 変更点: ローディングテキストの色を動的に ★★★
+                        <p className={`text-center animate-pulse ${subTitleColor}`}>実績を読み込み中...</p>
                     ) : error ? (
                         <p className="text-center text-red-600 bg-red-100 p-3 rounded-lg shadow-sm">{error}</p>
                     ) : achievements.length > 0 ? (
@@ -363,7 +376,8 @@ export default function AchievementsPage() {
                             ))}
                         </div>
                     ) : (
-                        <p className="text-center text-slate-500">まだ実績がありません。</p>
+                        // ★★★ 変更点: テキストの色を動的に ★★★
+                        <p className={`text-center ${subTitleColor}`}>まだ実績がありません。</p>
                     )}
                 </div>
 

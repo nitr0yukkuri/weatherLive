@@ -27,6 +27,9 @@ export default function WeatherDisplay({
     // 親コンポーネントから渡された天気をそのまま使うようにシンプル化
     const displayWeather = weather;
 
+    // ★★★ 変更点: text-[#5D4037]/80 を text-current/80 に変更 ★★★
+    const textColorClass = "text-current/80";
+
     return (
         <div className="pt-8 text-center h-[150px] flex flex-col justify-center">
             <div className="flex flex-col items-center gap-2 cursor-pointer" onClick={onCycleWeather}>
@@ -42,7 +45,8 @@ export default function WeatherDisplay({
                         {displayWeather ? (
                             <>
                                 <WeatherIcon type={displayWeather} size={96} />
-                                <div className="flex items-center justify-center gap-2 text-sm text-[#5D4037]/80 bg-white/30 backdrop-blur-sm rounded-md px-2 py-1">
+                                {/* ★★★ 変更点: textColorClass を適用 ★★★ */}
+                                <div className={`flex items-center justify-center gap-2 text-sm ${textColorClass} bg-white/30 backdrop-blur-sm rounded-md px-2 py-1`}>
                                     {isClient && <span>{currentTime.getHours().toString().padStart(2, '0')}:{currentTime.getMinutes().toString().padStart(2, '0')}</span>}
                                     {temperature !== null && <span>・{temperature}°C</span>}
                                     {location && <span>・{location}</span>}
@@ -50,7 +54,8 @@ export default function WeatherDisplay({
                             </>
                         ) : (
                             <div className="h-[120px] flex items-center justify-center">
-                                <p className="text-sm text-[#5D4037]/80 animate-pulse bg-white/30 backdrop-blur-sm rounded-md px-2 py-1">おてんき しらべちゅう...</p>
+                                {/* ★★★ 変更点: textColorClass を適用 ★★★ */}
+                                <p className={`text-sm ${textColorClass} animate-pulse bg-white/30 backdrop-blur-sm rounded-md px-2 py-1`}>おてんき しらべちゅう...</p>
                             </div>
                         )}
                     </motion.div>

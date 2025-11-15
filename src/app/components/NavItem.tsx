@@ -20,9 +20,9 @@ export default function NavItem({ icon, label, onClick, hasNotification = false,
         }
     };
 
-    // ★ isNight に応じて色を動的に決定
-    const iconColor = isNight ? 'text-slate-200' : 'text-slate-800';
-    const labelColor = isNight ? 'text-slate-300' : 'text-slate-700';
+    // ★ isNight に応じて色を動的に決定 (text-slate-200/300 を text-white に変更)
+    const iconColor = isNight ? 'text-white' : 'text-slate-800';
+    const labelColor = isNight ? 'text-white' : 'text-slate-700';
 
     const content = (
         <>

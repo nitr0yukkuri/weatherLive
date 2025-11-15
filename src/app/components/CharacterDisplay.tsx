@@ -15,10 +15,11 @@ type CharacterDisplayProps = {
     mood: "happy" | "neutral" | "sad";
     message: string | null;
     onCharacterClick: () => void;
+    isNight?: boolean; // ★★★ 変更点: isNight を追加
 };
 
-// ★ 変更点3: props で petEquipment を受け取る
-export default function CharacterDisplay({ petName, petColor, petEquipment, mood, message, onCharacterClick }: CharacterDisplayProps) {
+// ★ 変更点3: props で petEquipment と isNight を受け取る
+export default function CharacterDisplay({ petName, petColor, petEquipment, mood, message, onCharacterClick, isNight = false }: CharacterDisplayProps) {
 
     // --- ▼▼▼ 変更点4: 帽子を表示するロジックを追加 ▼▼▼ ---
     const renderEquipment = () => {
@@ -42,6 +43,13 @@ export default function CharacterDisplay({ petName, petColor, petEquipment, mood
     };
     // --- ▲▲▲ 変更点4ここまで ▲▲▲ ---
 
+    // ★★★ 変更点: 夜間用の色を定義 ★★★
+    const messageBg = isNight ? 'bg-gray-700/80' : 'bg-white/80';
+    const messageText = isNight ? 'text-white' : 'text-slate-700';
+    const messageArrow = isNight ? 'border-t-gray-700/80' : 'border-t-white/80';
+    const nameBg = isNight ? 'bg-black/30' : 'bg-white/30';
+    // ★★★ 変更点ここまで ★★★
+
     return (
         <div className="flex-grow flex flex-col items-center justify-center gap-y-4 p-3 text-center pb-20 relative">
             <AnimatePresence>
@@ -51,10 +59,13 @@ export default function CharacterDisplay({ petName, petColor, petEquipment, mood
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.9 }}
                         transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                        className="absolute top-8 bg-white/80 backdrop-blur-sm rounded-xl px-3 py-1 shadow-md z-10"
+                        // ★★★ 変更点: messageBg を適用 ★★★
+                        className={`absolute top-8 ${messageBg} backdrop-blur-sm rounded-xl px-3 py-1 shadow-md z-10`}
                     >
-                        <p className="text-slate-700 text-[15px] font-medium">{message}</p>
-                        <div className="absolute left-1/2 -translate-x-1/2 bottom-[-8px] w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-t-8 border-t-white/80"></div>
+                        {/* ★★★ 変更点: messageText を適用 ★★★ */}
+                        <p className={`${messageText} text-[15px] font-medium`}>{message}</p>
+                        {/* ★★★ 変更点: messageArrow を適用 ★★★ */}
+                        <div className={`absolute left-1/2 -translate-x-1/2 bottom-[-8px] w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-t-8 ${messageArrow}`}></div>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -73,7 +84,8 @@ export default function CharacterDisplay({ petName, petColor, petEquipment, mood
             </div>
 
             <div>
-                <h1 className="text-4xl font-bold backdrop-blur-sm bg-white/30 rounded-lg px-4 py-1">{petName}</h1>
+                {/* ★★★ 変更点: nameBg を適用 ★★★ */}
+                <h1 className={`text-4xl font-bold backdrop-blur-sm ${nameBg} rounded-lg px-4 py-1`}>{petName}</h1>
             </div>
         </div>
     );

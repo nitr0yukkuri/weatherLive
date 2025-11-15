@@ -49,10 +49,15 @@ export default function CollectionPage() {
     const [selectedItem, setSelectedItem] = useState<CollectionItem | null>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
+    // ★★★ 変更点: isNight State を追加 ★★★
+    const [isNight, setIsNight] = useState(false);
+
     // ★ 背景色を localStorage から読み込む useEffect
     useEffect(() => {
         const storedWeather = localStorage.getItem(CURRENT_WEATHER_KEY) as WeatherType | null;
         setDynamicBackgroundClass(getBackgroundGradientClass(storedWeather));
+        // ★★★ 変更点: isNight をセット ★★★
+        setIsNight(storedWeather === 'night');
     }, []);
 
     useEffect(() => {
@@ -80,6 +85,10 @@ export default function CollectionPage() {
         }
     };
 
+    // ★★★ 変更点: 夜間用のリンクとサブタイトル色 ★★★
+    const linkColor = isNight ? 'text-gray-300 hover:text-white' : 'text-slate-500 hover:text-slate-700';
+    const subTitleColor = isNight ? 'text-gray-300' : 'text-slate-500';
+
     return (
         <div className="w-full min-h-screen bg-gray-200 flex items-center justify-center p-4">
             {/* ★ 5. ItemDetailModalのレンダリングを追加 */}
@@ -89,16 +98,19 @@ export default function CollectionPage() {
                 item={selectedItem}
             />
 
-            {/* ★★★ main タグの className を変更 ★★★ */}
-            <main className={`w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col text-slate-700 ${dynamicBackgroundClass}`}>
+            {/* ★★★ main タグの className を変更 (文字色を動的に) ★★★ */}
+            <main className={`w-full max-w-sm h-[640px] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col ${isNight ? 'text-white' : 'text-slate-700'} ${dynamicBackgroundClass}`}>
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-black/80 rounded-b-xl z-10"></div>
 
                 <div className="flex-grow overflow-y-auto p-6">
                     <header className="mb-8">
-                        <Link href="/" className="text-slate-500 mb-6 inline-block text-sm hover:text-slate-700 transition-colors">← もどる</Link>
+                        {/* ★★★ 変更点: linkColor を適用 ★★★ */}
+                        <Link href="/" className={`mb-6 inline-block text-sm ${linkColor} transition-colors`}>← もどる</Link>
                         {/* ★★★ h1 タグの className を変更 (視認性UP) ★★★ */}
-                        <h1 className="text-4xl font-extrabold text-slate-800 tracking-wider backdrop-blur-sm bg-white/30 rounded-lg px-4 py-1">ずかん</h1>
-                        <p className="text-slate-500 mt-1">集めたアイテムを見てみよう</p>
+                        {/* ★★★ 変更点: h1 の文字色を動的に ★★★ */}
+                        <h1 className={`text-4xl font-extrabold ${isNight ? 'text-white' : 'text-slate-800'} tracking-wider backdrop-blur-sm bg-white/30 rounded-lg px-4 py-1`}>ずかん</h1>
+                        {/* ★★★ 変更点: subTitleColor を適用 ★★★ */}
+                        <p className={`${subTitleColor} mt-1`}>集めたアイテムを見てみよう</p>
                     </header>
 
                     {loading ? (
@@ -122,6 +134,7 @@ export default function CollectionPage() {
                                             </span>
                                         )}
                                     </div>
+                                    {/* ★★★ 変更点: パネル内の文字色は変更しない (白背景のため) ★★★ */}
                                     <p className={`text-xs text-center mt-1 ${item.quantity === 0 ? 'text-slate-400' : 'text-slate-600 font-bold'}`}>
                                         {item.quantity > 0 ? item.name : '？？？'}
                                     </p>
