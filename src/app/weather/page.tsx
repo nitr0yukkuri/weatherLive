@@ -86,13 +86,21 @@ const getBackgroundColorClass = (weatherType: string | undefined): string => {
 };
 
 // メッセージ生成ロジック (循環表示)
+// ★★★ 変更点: 「夜」の場合の分岐を最優先に追加 ★★★
 const generateAdviceMessage = (data: { day: string; weather: string; high: number; low: number; pop: number }, index: number): string => {
     const { day, weather, high, low, pop } = data;
     const weatherText = getWeatherText(weather);
 
     let messages: string[] = [];
 
-    if (pop >= 50) {
+    // ★★★ 夜の場合のメッセージを先に追加 ★★★
+    if (weather === 'night') {
+        messages = [
+            `こんばんは！${day}は最高${high}°C、最低${low}°Cだったみたいだね。`,
+            `${day}もおつかれさま！ゆっくり休んでね。`,
+            `もう夜だね。${day}の気温は最高${high}°C、最低${low}°Cだったよ。`,
+        ];
+    } else if (pop >= 50) {
         messages = [
             `☔ ${day}は雨が降るみたい！傘を忘れないでね。`,
             `💧 降水確率は${pop}%だよ。今日はお気に入りのレイングッズを用意しよう！`,
@@ -111,6 +119,7 @@ const generateAdviceMessage = (data: { day: string; weather: string; high: numbe
             `🌬️ ${day}は冷え込む予報だよ。マフラーや手袋が必要かも。`,
         ];
     } else {
+        // ★★★ (「夜」がここで処理されなくなったため、不自然な表示が解消されます) ★★★
         messages = [
             `${day}の天気は${weatherText}だよ。最高${high}°C、最低${low}°C。`,
             `${day}の予報は${weatherText}だね。穏やかな一日になりますように。`,
